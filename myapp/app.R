@@ -8,8 +8,7 @@
 #install.packages("tidytext")
 #install.packages("dplyr")
 #install.packages("gutenbergr")
-#install.packages("wordcloud")
-install.packages("ggwordcloud")
+#install.packages("ggwordcloud")
 
 #Hent biblioteker
 library(shiny)
@@ -18,7 +17,6 @@ library(ggplot2)
 library(tidytext)
 library(dplyr)
 library(gutenbergr)
-library(wordcloud)
 library(ggwordcloud)
 
 #-------------------------------------Dataindsamling-----------------------------------
@@ -87,13 +85,6 @@ tidy_Great_Gatsby<- tidy_Great_Gatsby %>%
 tidy_Moby_Dick <- tidy_Moby_Dick %>%
   count(word, sort = TRUE) %>%
   mutate(word = reorder(word, n))
-
-
-tidy_Moby_Dick %>%
-  slice(1:20) %>%
-  ggplot(., aes(label = word, size = n, color = n)) +
-  geom_text_wordcloud() +
-  theme_minimal()
 
 #-----------------------------------Shiny App----------------------------------------------
 
@@ -171,6 +162,26 @@ server <- function(input, output) {
     ggplot(., aes(label = word, size = n, color = n)) +
       geom_text_wordcloud() +
       theme_minimal()
+  })
+  
+  output$viz_wordcloud <- renderPlot({
+    #Får output til at matche input når der skiftes mellem teksterne
+    selected_text_data_cloud <- switch(input$text_data,
+                                       "Frankenstein" = tidy_Frankenstein,
+                                       "A Tale of two cities" = tidy_A_Tale_of_Two,
+                                       "The Great Gatsby" = tidy_Great_Gatsby,
+                                       "Moby Dick" = tidy_Moby_Dick)
+    
+    #Visualisering af wordcloud
+    #overvej om min.freq er mere relevant end max.words og om det skal være en 'aktiv' funktion, med inputs
+    #overvej om ggplots version er mere optimal i forhold til skala
+    selected_text_data_cloud %>%
+      slice_max(n, n = 20) %>% 
+      ggplot(aes(label = word, size = n, color = n)) +
+      geom_text_wordcloud() +
+      theme_minimal() +
+      scale_size_area(max_size = 12) +
+      scale_color_gradient(low = "red", high = "darkred")
   })
   
 }
