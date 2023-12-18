@@ -90,7 +90,7 @@ tidy_Moby_Dick <- tidy_Moby_Dick %>%
 
 # Definer UI
 ui <- fluidPage(
-  titlePanel("Text Mining"),
+  titlePanel("Text Mining 2.0"),
   
   sidebarLayout(
     sidebarPanel(
@@ -129,7 +129,6 @@ server <- function(input, output) {
     #Visualisering af den fulde tekst
     selected_text_data_read$text
   })
-  
   
   #Søjlediagram
   #Får output til at matche input når der skiftes mellem teksterne
