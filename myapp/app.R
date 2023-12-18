@@ -90,7 +90,7 @@ tidy_Moby_Dick <- tidy_Moby_Dick %>%
 
 # Definer UI
 ui <- fluidPage(
-  titlePanel("Text Mining 2.0"),
+  titlePanel("Text Mining"),
   
   sidebarLayout(
     sidebarPanel(
