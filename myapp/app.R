@@ -9,6 +9,7 @@
 #install.packages("dplyr")
 #install.packages("gutenbergr")
 #install.packages("wordcloud")
+install.packages("ggwordcloud")
 
 #Hent biblioteker
 library(shiny)
@@ -18,6 +19,7 @@ library(tidytext)
 library(dplyr)
 library(gutenbergr)
 library(wordcloud)
+library(ggwordcloud)
 
 #-------------------------------------Dataindsamling-----------------------------------
 
@@ -86,6 +88,13 @@ tidy_Moby_Dick <- tidy_Moby_Dick %>%
   count(word, sort = TRUE) %>%
   mutate(word = reorder(word, n))
 
+
+tidy_Moby_Dick %>%
+  slice(1:20) %>%
+  ggplot(., aes(label = word, size = n, color = n)) +
+  geom_text_wordcloud() +
+  theme_minimal()
+
 #-----------------------------------Shiny App----------------------------------------------
 
 # Definer UI
@@ -127,7 +136,7 @@ server <- function(input, output) {
                     "Moby Dick" = Moby_Dick)
     
     #Visualisering af den fulde tekst
-    selected_text_data_read$text
+    head(selected_text_data_read$text, 100)
   })
   
   #Søjlediagram
@@ -158,11 +167,10 @@ server <- function(input, output) {
                                  "The Great Gatsby" = tidy_Great_Gatsby,
                                  "Moby Dick" = tidy_Moby_Dick)
     #Visualisering af wordcloud
-    #overvej om min.freq er mere relevant end max.words og om det skal være en 'aktiv' funktion, med inputs
-    #overvej om ggplots version er mere optimal i forhold til skala
     selected_text_data_cloud %>%
-      count(selected_text_data_cloud$word) %>%
-      with(wordcloud(selected_text_data_cloud$word, selected_text_data_cloud$n, max.words = 50, scale = c(2, .5), colors = selected_text_data_cloud$n, ordered.colors = TRUE))
+    ggplot(., aes(label = word, size = n, color = n)) +
+      geom_text_wordcloud() +
+      theme_minimal()
   })
   
 }
