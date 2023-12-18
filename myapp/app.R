@@ -108,6 +108,7 @@ ui <- fluidPage(
   mainPanel(
   #Danner et menu-layout, hvor det er muligt at skifte mellem visualiseringerne
     tabsetPanel(type = "tabs",
+              tabPanel("Læs tekst", textOutput("viz_text")),
               tabPanel("Søjlediagram", plotOutput("viz_plot")),
               tabPanel("Wordcloud", plotOutput("viz_wordcloud")))
   )
@@ -116,8 +117,22 @@ ui <- fluidPage(
   
 # Definer server logic
 server <- function(input, output) {
+  #Læs_tekst
+  #Får output til at matche input når der skiftes mellem teksterne
+  output$viz_text <- renderText({
+    selected_text_data_read <- switch(input$text_data,
+                    "Frankenstein" = Frankenstein,
+                    "A Tale of two cities" = A_Tale_of_Two,
+                    "The Great Gatsby" = Great_Gatsby,
+                    "Moby Dick" = Moby_Dick)
+    
+    #Visualisering af den fulde tekst
+    selected_text_data_read$text
+  })
+  
+  
   #Søjlediagram
-  #Får output til at matche input når der skiftes mellem texsterne
+  #Får output til at matche input når der skiftes mellem teksterne
   output$viz_plot <- renderPlot({
     selected_text_data_plot <- switch(input$text_data,
                    "Frankenstein" = tidy_Frankenstein,
@@ -137,18 +152,18 @@ server <- function(input, output) {
   })
   #Wordcloud
   output$viz_wordcloud <- renderPlot({
-    #Får output til at matche input når der skiftes mellem texsterne
+    #Får output til at matche input når der skiftes mellem teksterne
     selected_text_data_cloud <- switch(input$text_data,
                                  "Frankenstein" = tidy_Frankenstein,
                                  "A Tale of two cities" = tidy_A_Tale_of_Two,
                                  "The Great Gatsby" = tidy_Great_Gatsby,
                                  "Moby Dick" = tidy_Moby_Dick)
     #Visualisering af wordcloud
-    #overvej om min.freq er mere relevant end max.words og om det skal være en 'aktiv' funktion, med inputs 
+    #overvej om min.freq er mere relevant end max.words og om det skal være en 'aktiv' funktion, med inputs
+    #overvej om ggplots version er mere optimal i forhold til skala
     selected_text_data_cloud %>%
       count(selected_text_data_cloud$word) %>%
-      with(wordcloud(selected_text_data_cloud$word, selected_text_data_cloud$n, max.words = 50, colors = selected_text_data_cloud$n, ordered.colors = TRUE))
-    
+      with(wordcloud(selected_text_data_cloud$word, selected_text_data_cloud$n, max.words = 50, scale = c(2, .5), colors = selected_text_data_cloud$n, ordered.colors = TRUE))
   })
   
 }
