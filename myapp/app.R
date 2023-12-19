@@ -25,10 +25,19 @@ library(ggwordcloud)
 #The Great Gatsby og Moby Dick.
 
 #Hent og definer data
-Frankenstein <- gutenberg_download(84)
-A_Tale_of_Two <- gutenberg_download(98)
-Great_Gatsby <- gutenberg_download(64317)
-Moby_Dick <- gutenberg_download(2701)
+#Frankenstein <- gutenberg_download(84)
+#A_Tale_of_Two <- gutenberg_download(98)
+#Great_Gatsby <- gutenberg_download(64317)
+#Moby_Dick <- gutenberg_download(2701)
+
+#Indlæs Frankenstein fra Data mappen
+load("Data/Frankenstein_data.RData")
+#Indlæs A Tale of Two Cities fra Data mappen
+load("Data/A_Tale_of_Two_data.RData")
+#Indlæs The Great Gatsby fra Data mappen
+load("Data/Great_Gatsby_data.RData")
+#Indlæs Moby Dick fra Data mappen
+load("Data/Moby_Dick_data.RData")
 
 #-------------------------------------Databehandling-----------------------------------
 #Klargør data til data mining
