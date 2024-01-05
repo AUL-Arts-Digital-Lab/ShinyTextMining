@@ -120,21 +120,27 @@ ui <- fluidPage(
     
     #Danner et menu-layout, hvor det er muligt at skifte mellem visualiseringerne
     tabsetPanel(type = "tabs",
-              tabPanel("Læs tekst", 
+              tabPanel("Læs tekst",
                        br(),
                        h4("Info"),
                        helpText("Visualiseringen indeholder både tekster med og uden stopord"),
-                       selectInput(inputId = "text_data_read", 
-                                   label = "Vælg text",
+                       column(4,
+                              br(),
+                              selectInput(inputId = "text_data_read", 
+                                   label = "Vælg tekst",
                                    choices = c("Frankenstein",
-                                               "Frankenstein (uden stopord)",
-                                               "A Tale of Two Cities (uden stopord)",
                                                "A Tale of two cities", 
                                                "The Great Gatsby",
-                                               "The Great Gatsby (uden stopord)",
                                                "Moby Dick",
-                                               "Moby Dick (uden stopord)"), 
-                                   selected = "Frankenstein"),
+                                   selected = "Frankenstein"))
+                       ),
+                       br(),
+                       column(8,
+                       radioButtons(inputId = "selected_stopword_view", 
+                                    label = "Se tekst med eller uden stopord",
+                                    choices = c("Med", "Uden"), 
+                                    selected = "Med")
+                       ),
                        textOutput("viz_text")),
               tabPanel("Søjlediagram",
                        br(),
@@ -172,15 +178,20 @@ server <- function(input, output, session) {
   
   #Får output til at matche input når der skiftes mellem teksterne
   output$viz_text <- renderText({
-    selected_text_data_read <- switch(input$text_data_read,
-                    "Frankenstein" = tidy_Frankenstein_with_stopwords,
-                    "Frankenstein (uden stopord)" = tidy_Frankenstein,
-                    "A Tale of two cities" = tidy_A_Tale_of_Two_with_stopwords,
-                    "A Tale of Two Cities (uden stopord)" = tidy_A_Tale_of_Two,
-                    "The Great Gatsby" = tidy_Great_Gatsby_with_stopwords,
-                    "The Great Gatsby (uden stopord)" = tidy_Great_Gatsby,
-                    "Moby Dick" = tidy_Moby_Dick_with_stopwords,
-                    "Moby Dick (uden stopord)" = tidy_Moby_Dick)
+    #Skift mellem tekster med og uden stopord, alt efter hvilken knap, der er aktiveret
+    if (input$selected_stopword_view == "Med"){
+      selected_text_data_read <- switch(input$text_data_read,
+                                        "Frankenstein" = tidy_Frankenstein_with_stopwords,
+                                        "A Tale of two cities" = tidy_A_Tale_of_Two_with_stopwords,
+                                        "The Great Gatsby" = tidy_Great_Gatsby_with_stopwords,
+                                        "Moby Dick" = tidy_Moby_Dick_with_stopwords)
+    } else if (input$selected_stopword_view == "Uden"){
+      selected_text_data_read <- switch(input$text_data_read,
+                                        "Frankenstein" = tidy_Frankenstein,
+                                        "A Tale of two cities" = tidy_A_Tale_of_Two,
+                                        "The Great Gatsby" = tidy_Great_Gatsby,
+                                        "Moby Dick" = tidy_Moby_Dick)
+    }
     
     #Visualisering af den fulde tekst
     head(selected_text_data_read$word, 1000)
@@ -188,7 +199,6 @@ server <- function(input, output, session) {
   
 #------------------------ Søjlediagram --------------------------------------------------
   
-
   
   #Får output til at matche input når der skiftes mellem teksterne
   output$viz_plot <- renderPlot({
@@ -198,6 +208,7 @@ server <- function(input, output, session) {
                    "The Great Gatsby" = sorted_tidy_Great_Gatsby,
                    "Moby Dick" = sorted_tidy_Moby_Dick)
     
+    #Definerer at der er tale om inputværdi
     slice_size <- input$slice_size
     
     #Visualisering af søjlediagram
