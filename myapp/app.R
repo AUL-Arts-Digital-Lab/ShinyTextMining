@@ -148,7 +148,7 @@ ui <- fluidPage(
                                    selected = "Frankenstein"),
                        br(),
                        sliderInput(inputId = "slice_size",
-                                   label = "Vælg antal ord i visualiseringen mellem 1 og 20",
+                                   label = "Vælg antal ord i visualiseringen mellem 5 og 20",
                                    min = 5, max = 20, value = 10, step = 5), 
                        plotOutput("viz_plot")),
               tabPanel("Wordcloud",
@@ -160,6 +160,9 @@ ui <- fluidPage(
                                                "The Great Gatsby", 
                                                "Moby Dick"), 
                                    selected = "Frankenstein"),
+                       sliderInput(inputId = "word_freq_cloud", 
+                                   label = "Vælg antal ord i visualiseringen mellem 5 og 30",
+                                   min =5, max = 30, value = 20, step = 5),
                        plotOutput("viz_wordcloud")))
   )
 )
@@ -223,9 +226,11 @@ server <- function(input, output, session) {
                                        "The Great Gatsby" = sorted_tidy_Great_Gatsby,
                                        "Moby Dick" = sorted_tidy_Moby_Dick)
     
+    word_freq_cloud <- input$word_freq_cloud
+    
     #Visualisering af wordcloud
     selected_text_data_cloud %>%
-      slice_max(n, n = 20) %>% 
+      head(word_freq_cloud) %>% 
       ggplot(aes(label = word, size = n, color = n)) +
       geom_text_wordcloud() +
       theme_minimal() +
