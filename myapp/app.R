@@ -208,7 +208,6 @@ server <- function(input, output, session) {
                    "The Great Gatsby" = sorted_tidy_Great_Gatsby,
                    "Moby Dick" = sorted_tidy_Moby_Dick)
     
-    #Definerer at der er tale om inputværdi
     slice_size <- input$slice_size
     
     #Visualisering af søjlediagram
@@ -234,9 +233,11 @@ server <- function(input, output, session) {
                                        "The Great Gatsby" = sorted_tidy_Great_Gatsby,
                                        "Moby Dick" = sorted_tidy_Moby_Dick)
     
+    word_freq_cloud <- input$word_freq_cloud
+    
     #Visualisering af wordcloud
     selected_text_data_cloud %>%
-      slice_max(n, n = 20) %>% 
+      head(word_freq_cloud) %>% 
       ggplot(aes(label = word, size = n, color = n)) +
       geom_text_wordcloud() +
       theme_minimal() +
