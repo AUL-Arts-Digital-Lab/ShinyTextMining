@@ -166,6 +166,9 @@ ui <- fluidPage(
                                                "The Great Gatsby", 
                                                "Moby Dick"), 
                                    selected = "Frankenstein"),
+                       sliderInput(inputId = "word_freq_cloud", 
+                                   label = "Vælg antal ord i visualiseringen mellem 5 og 30",
+                                   min =5, max = 30, value = 20, step = 5),
                        plotOutput("viz_wordcloud")))
   )
 )
