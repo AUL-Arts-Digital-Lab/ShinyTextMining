@@ -9,6 +9,7 @@
 #install.packages("dplyr")
 #install.packages("gutenbergr")
 #install.packages("ggwordcloud")
+#install.package("janeaustenr")
 
 #Hent biblioteker
 library(shiny)
@@ -18,17 +19,12 @@ library(tidytext)
 library(dplyr)
 library(gutenbergr)
 library(ggwordcloud)
+library(janeaustenr)
 
 #-------------------------------------Dataindsamling-----------------------------------
 
-#Valg af data fra Gutenberg pakken i R. Her hentes Frankenstein, A tale of two cities, 
-#The Great Gatsby og Moby Dick.
-
-#Hent og definer data
-#Frankenstein <- gutenberg_download(84)
-#A_Tale_of_Two <- gutenberg_download(98)
-#Great_Gatsby <- gutenberg_download(64317)
-#Moby_Dick <- gutenberg_download(2701)
+#Valg af data fra Gutenberg pakken i R. 
+#Teksterne er alle uden ophavsret og kan yderligere findes i data mappen
 
 #Indlæs Frankenstein fra Data mappen
 load("Data/Frankenstein_data.RData")
@@ -42,6 +38,8 @@ load("Data/Moby_Dick_data.RData")
 load("Data/Grimm_Brothers_corpus.RData")
 #Indlæs H.C Andersen fra Data mappen
 load("Data/HC_Andersen_corpus.RData")
+#Indlæs Jane Austens romaner (stammer fra biblioteket janeaustenr)
+Austen_corpora <- austen_books()
 
 #-------------------------------------Databehandling-----------------------------------
 #Klargør data til data mining
@@ -59,6 +57,14 @@ A_Tale_of_Two_pre_tidy <- A_Tale_of_Two %>%
          chapter = cumsum(str_detect(text,
                                      regex("^chapter [\\divxlc]",
                                            ignore_case = TRUE))))
+# Jane Austen corpora
+Austen_corpora_pre_tidy <- Austen_corpora %>%
+  group_by(book) %>% 
+  mutate(linenumber = row_number(),
+         chapter = cumsum(str_detect(text,
+                                     regex("^chapter [\\divxlc]",
+                                           ignore_case = TRUE)))) %>% 
+  ungroup()
 
 #Opdel tekst til enkelte ord samt fjern stopord
 #Tidy af Frankenstein - stopord fjernes
@@ -91,6 +97,11 @@ tidy_Grimm_Brothers <- Grimm_Brothers_corpus %>%
   unnest_tokens(word, text) %>% 
   anti_join(stop_words)
 
+#Tidy af Austen
+tidy_Austen <- Austen_corpora_pre_tidy %>% 
+  unnest_tokens(word, text) %>% 
+  anti_join(stop_words)
+
 #Lav en tidy version af teksterne, hvor stopordene stadig er i dataen
 tidy_Frankenstein_with_stopwords <- Frankenstein %>%
   unnest_tokens(word, text)
@@ -104,34 +115,48 @@ tidy_HC_Andersen_with_stopwords <- HC_Andersen_corpus %>%
   unnest_tokens(word, text)
 tidy_Grimm_Brothers_with_stopwords <- Grimm_Brothers_corpus %>% 
   unnest_tokens(word, text)
+tidy_Austen_with_stopwords <- Austen_corpora %>%
+  unnest_tokens(word, text)
 
 #Tilføj kolonnen n, der indeholder ords fremkomst, til dataframe
 #Frankenstein
 sorted_tidy_Frankenstein <- tidy_Frankenstein %>%
   count(word, sort = TRUE) %>%
-  mutate(word = reorder(word, n))
+  mutate(word = reorder(word, n)) %>% 
+  ungroup()
 #A Tale of Two Cities
 sorted_tidy_A_Tale_of_Two <- tidy_A_Tale_of_Two %>%
   count(word, sort = TRUE) %>%
-  mutate(word = reorder(word, n))
+  mutate(word = reorder(word, n)) %>% 
+  ungroup()
 #The Great Gatsby
 sorted_tidy_Great_Gatsby<- tidy_Great_Gatsby %>%
   count(word, sort = TRUE) %>%
-  mutate(word = reorder(word, n))
+  mutate(word = reorder(word, n)) %>% 
+  ungroup()
 #Moby Dick
 sorted_tidy_Moby_Dick <- tidy_Moby_Dick %>%
   count(word, sort = TRUE) %>%
-  mutate(word = reorder(word, n))
+  mutate(word = reorder(word, n)) %>% 
+  ungroup()
 #H.C Andersen
 sorted_tidy_HC_Andersen <- tidy_HC_Andersen %>%
   group_by(title) %>% 
   count(word, sort = TRUE) %>% 
-  mutate(word = reorder(word, n))
+  mutate(word = reorder(word, n)) %>% 
+  ungroup()
 #Grimm Brothers
 sorted_tidy_Grimm_Brothers <- tidy_Grimm_Brothers %>%
   group_by(title) %>% 
   count(word, sort = TRUE) %>% 
-  mutate(word = reorder(word, n))
+  mutate(word = reorder(word, n)) %>% 
+  ungroup()
+#Austen
+sorted_tidy_Austen <- tidy_Austen %>% 
+  group_by(book) %>% 
+  count(word, sort = TRUE) %>% 
+  mutate(word = reorder(word, n)) %>% 
+  ungroup()
   
 #-----------------------------------Shiny App----------------------------------------------
 
@@ -169,6 +194,7 @@ ui <- fluidPage(
                                                "Moby Dick",
                                                "Brødrene Grimms eventyr",
                                                "H.C Andersens eventyr",
+                                               "Jane Austens Romaner",
                                    selected = "Frankenstein"))
                        ),
                        br(),
@@ -182,7 +208,6 @@ ui <- fluidPage(
                        textOutput("viz_text")),
               tabPanel("Søjlediagram",
                        br(),
-                       column(6,
                        #Definerer funktionen, hvor det er muligt at vælge mellem de forskellige tekster
                        selectInput(inputId = "text_data_plot", 
                                    label = "Vælg text",
@@ -191,17 +216,13 @@ ui <- fluidPage(
                                                "The Great Gatsby", 
                                                "Moby Dick",
                                                "Brødrene Grimms eventyr",
-                                               "H.C Andersens eventyr", 
+                                               "H.C Andersens eventyr",
+                                               "Jane Austens Romaner",
                                    selected = "Frankenstein")),
-                       ),
                        br(),
-                       br(),
-                       br(),
-                       column(6,
                        sliderInput(inputId = "slice_size",
                                    label = "Vælg antal ord i visualiseringen mellem 1 og 20",
                                    min = 5, max = 20, value = 10, step = 5),
-                       ),
                        plotOutput("viz_plot")),
               tabPanel("Wordcloud",
                        #Definerer funktionen, hvor det er muligt at vælge mellem de forskellige tekster
@@ -212,7 +233,8 @@ ui <- fluidPage(
                                                "The Great Gatsby", 
                                                "Moby Dick",
                                                "Brødrene Grimms eventyr",
-                                               "H.C Andersens eventyr"), 
+                                               "H.C Andersens eventyr",
+                                               "Jane Austens Romaner"), 
                                    selected = "Frankenstein"),
                        sliderInput(inputId = "word_freq_cloud", 
                                    label = "Vælg antal ord i visualiseringen mellem 5 og 30",
@@ -237,7 +259,8 @@ server <- function(input, output, session) {
                                         "The Great Gatsby" = tidy_Great_Gatsby_with_stopwords,
                                         "Moby Dick" = tidy_Moby_Dick_with_stopwords,
                                         "Brødrene Grimms eventyr" = tidy_Grimm_Brothers_with_stopwords,
-                                        "H.C Andersens eventyr" = tidy_HC_Andersen_with_stopwords)
+                                        "H.C Andersens eventyr" = tidy_HC_Andersen_with_stopwords,
+                                        "Jane Austens Romaner" = tidy_Austen_with_stopwords)
     } else if (input$selected_stopword_view == "Uden"){
       selected_text_data_read <- switch(input$text_data_read,
                                         "Frankenstein" = tidy_Frankenstein,
@@ -245,7 +268,8 @@ server <- function(input, output, session) {
                                         "The Great Gatsby" = tidy_Great_Gatsby,
                                         "Moby Dick" = tidy_Moby_Dick,
                                         "Brødrene Grimms eventyr" = tidy_Grimm_Brothers,
-                                        "H.C Andersens eventyr" = tidy_HC_Andersen)
+                                        "H.C Andersens eventyr" = tidy_HC_Andersen,
+                                        "Jane Austens Romaner" = tidy_Austen)
     }
     
     #Visualisering af den fulde tekst
@@ -263,23 +287,54 @@ server <- function(input, output, session) {
                    "The Great Gatsby" = sorted_tidy_Great_Gatsby,
                    "Moby Dick" = sorted_tidy_Moby_Dick,
                    "Brødrene Grimms eventyr" = sorted_tidy_Grimm_Brothers,
-                   "H.C Andersens eventyr" = sorted_tidy_HC_Andersen)
+                   "H.C Andersens eventyr" = sorted_tidy_HC_Andersen,
+                   "Jane Austens Romaner" = sorted_tidy_Austen)
     
     slice_size <- input$slice_size
+    words_sum <- sum(as.numeric(selected_text_data_plot$n))
     
     if (input$text_data_plot == "Brødrene Grimms eventyr"){
       selected_text_data_plot %>%
-        arrange(title) %>% 
-        head(slice_size) %>%
+        group_by(title) %>% 
+        slice_max(n, n = slice_size) %>%
+        ungroup() %>% 
         ggplot(., aes(x = word, y = n, fill = n)) +
         geom_col() +
-        facet_wrap( ~ title, scales = "free_y") +
+        facet_wrap( ~ title, ncol = 6, scales = "free") +
         coord_flip() +
         geom_label(aes(x = word, y = n, label = n), 
                     vjust = "top", hjust = "center",
                     fill = "white", color = "black", 
                     size = 3) +
-        labs(x = "Ord", y = "Hyppighed for ordets forekomst", fill = "Hyppighed for ordets forekomst")
+        labs(title = "Hyppigheden for ordenes forekomst i teksten", subtitle = paste("Det samlede antal ord i korporaet er:", words_sum), x = "Ord", y = "Hyppighed", fill = "Hyppighed")
+    } else if (input$text_data_plot == "H.C Andersens eventyr"){
+      selected_text_data_plot %>%
+        group_by(title) %>% 
+        slice_max(n, n = slice_size) %>%
+        ungroup() %>% 
+        ggplot(., aes(x = word, y = n, fill = n)) +
+        geom_col() +
+        facet_wrap( ~ title, ncol = 6, scales = "free") +
+        coord_flip() +
+        geom_label(aes(x = word, y = n, label = n), 
+                   vjust = "top", hjust = "center",
+                   fill = "white", color = "black", 
+                   size = 3) +
+        labs(title = "Hyppigheden for ordenes forekomst i teksten", subtitle = paste("Det samlede antal ord i korporaet er:", words_sum), x = "Ord", y = "Hyppighed", fill = "Hyppighed")
+    } else if (input$text_data_plot == "Jane Austens Romaner"){
+      selected_text_data_plot %>%
+        group_by(book) %>% 
+        slice_max(n, n = slice_size) %>%
+        ungroup() %>% 
+        ggplot(., aes(x = word, y = n, fill = n)) +
+        geom_col() +
+        facet_wrap( ~ book, ncol = 3, scales = "free") +
+        coord_flip() +
+        geom_label(aes(x = word, y = n, label = n), 
+                   vjust = "top", hjust = "center",
+                   fill = "white", color = "black", 
+                   size = 3) +
+        labs(title = "Hyppigheden for ordenes forekomst i teksten", subtitle = paste("Det samlede antal ord i korporaet er:", words_sum), x = "Ord", y = "Hyppighed", fill = "Hyppighed")
     } else {
       #Visualisering af søjlediagram
       selected_text_data_plot %>%
@@ -291,7 +346,7 @@ server <- function(input, output, session) {
                    vjust = "top", hjust = "center",
                    fill = "white", color = "black", 
                    size = 3) +
-        labs(x = "Ord", y = "Hyppighed for ordets forekomst", fill = "Hyppighed for ordets forekomst")
+        labs(title = "Hyppigheden for ordenes forekomst i teksten", subtitle = paste("Det samlede antal ord i teksten er:", words_sum), x = "Ord", y = "Hyppighed", fill = "Hyppighed")
     }
     
   })
@@ -305,7 +360,8 @@ server <- function(input, output, session) {
                                        "The Great Gatsby" = sorted_tidy_Great_Gatsby,
                                        "Moby Dick" = sorted_tidy_Moby_Dick,
                                        "Brødrene Grimms eventyr" = sorted_tidy_Grimm_Brothers,
-                                       "H.C Andersens eventyr" = sorted_tidy_HC_Andersen)
+                                       "H.C Andersens eventyr" = sorted_tidy_HC_Andersen,
+                                       "Jane Austens Romaner" = sorted_tidy_Austen)
     
     word_freq_cloud <- input$word_freq_cloud
     
