@@ -41,6 +41,10 @@ load("Data/HC_Andersen_corpus.RData")
 #Indlæs Jane Austens romaner (stammer fra biblioteket janeaustenr)
 Austen_corpora <- austen_books()
 
+#-------------------------------------Stopwords----------------------------------------
+#Lav en ny liste indeholdene selvvalgte stopord
+my_stop_words <- data.frame(word = c("project", "gutenberg"))
+
 #-------------------------------------Databehandling-----------------------------------
 #Klargør data til data mining
 
@@ -95,7 +99,8 @@ tidy_HC_Andersen <- HC_Andersen_corpus %>%
 #Tidy af Brother Grimm
 tidy_Grimm_Brothers <- Grimm_Brothers_corpus %>% 
   unnest_tokens(word, text) %>% 
-  anti_join(stop_words)
+  anti_join(stop_words) %>% 
+  anti_join(my_stop_words, by = "word")
 
 #Tidy af Austen
 tidy_Austen <- Austen_corpora_pre_tidy %>% 
@@ -109,7 +114,7 @@ tidy_A_Tale_of_Two_with_stopwords <- A_Tale_of_Two %>%
   unnest_tokens(word, text)
 tidy_Great_Gatsby_with_stopwords <- Great_Gatsby %>%
   unnest_tokens(word, text)
-tidy_Moby_Dick_with_stopwords <- Moby_Dick %>%
+tidy_Moby_Dick_with_stopwords <- Moby_Dick %>% 
   unnest_tokens(word, text)
 tidy_HC_Andersen_with_stopwords <- HC_Andersen_corpus %>% 
   unnest_tokens(word, text)
@@ -194,8 +199,8 @@ ui <- fluidPage(
                                                "Moby Dick",
                                                "Brødrene Grimms eventyr",
                                                "H.C Andersens eventyr",
-                                               "Jane Austens Romaner",
-                                   selected = "Frankenstein"))
+                                               "Jane Austens Romaner"),
+                                   selected = "Frankenstein")
                        ),
                        br(),
                        column(8,
@@ -217,13 +222,19 @@ ui <- fluidPage(
                                                "Moby Dick",
                                                "Brødrene Grimms eventyr",
                                                "H.C Andersens eventyr",
-                                               "Jane Austens Romaner",
-                                   selected = "Frankenstein")),
+                                               "Jane Austens Romaner"),
+                                   selected = "Frankenstein"),
+                       br(),
+                       radioButtons(inputId = "selected_corpora_or_text",
+                                    label = "Vis for hele korpora eller se fordelingen på tekster",
+                                    choices = c("Hele korpora",
+                                                "Tekster"),
+                                    selected = "Hele korpora"),
                        br(),
                        sliderInput(inputId = "slice_size",
-                                   label = "Vælg antal ord i visualiseringen mellem 1 og 20",
+                                   label = "Vælg antal ord i visualiseringen mellem 5 og 20",
                                    min = 5, max = 20, value = 10, step = 5),
-                       plotOutput("viz_plot")),
+                       plotOutput("viz_plot")), 
               tabPanel("Wordcloud",
                        #Definerer funktionen, hvor det er muligt at vælge mellem de forskellige tekster
                        selectInput(inputId = "text_data_cloud", 
@@ -278,7 +289,6 @@ server <- function(input, output, session) {
   
 #------------------------ Søjlediagram --------------------------------------------------
   
-  
   #Får output til at matche input når der skiftes mellem teksterne
   output$viz_plot <- renderPlot({
     selected_text_data_plot <- switch(input$text_data_plot,
@@ -290,13 +300,17 @@ server <- function(input, output, session) {
                    "H.C Andersens eventyr" = sorted_tidy_HC_Andersen,
                    "Jane Austens Romaner" = sorted_tidy_Austen)
     
+    #Definerer at antallet at ord i visualiseringen skal matche inputtet herfor
     slice_size <- input$slice_size
+    #Definerer udregningen for det samlede antal ord i en tekst
     words_sum <- sum(as.numeric(selected_text_data_plot$n))
     
-    if (input$text_data_plot == "Brødrene Grimms eventyr"){
+    #Visualiseringer af søjlediagram baseret på hele korpora eller enkelte tekster
+    #Brødrende Grimm - vis enkelte tekster
+    if (input$text_data_plot == "Brødrene Grimms eventyr" & input$selected_corpora_or_text == "Tekster"){
       selected_text_data_plot %>%
-        group_by(title) %>% 
-        slice_max(n, n = slice_size) %>%
+        group_by(title) %>%
+        slice_max(n, n = slice_size, with_ties = FALSE) %>%
         ungroup() %>% 
         ggplot(., aes(x = word, y = n, fill = n)) +
         geom_col() +
@@ -306,11 +320,32 @@ server <- function(input, output, session) {
                     vjust = "top", hjust = "center",
                     fill = "white", color = "black", 
                     size = 3) +
-        labs(title = "Hyppigheden for ordenes forekomst i teksten", subtitle = paste("Det samlede antal ord i korporaet er:", words_sum), x = "Ord", y = "Hyppighed", fill = "Hyppighed")
-    } else if (input$text_data_plot == "H.C Andersens eventyr"){
+        labs(title = "Hyppigheden for ordenes forekomst i teksten", 
+             subtitle = paste("Det samlede antal ord i korporaet er:", words_sum), 
+             x = "Ord", 
+             y = "Hyppighed", 
+             fill = "Hyppighed")
+    #Brødrende Grimm - vis hele korpora 
+  } else if (input$text_data_plot == "Brødrene Grimms eventyr" & input$selected_corpora_or_text == "Hele korpora"){
+      selected_text_data_plot %>%
+        slice_max(n, n = slice_size, with_ties = FALSE) %>%
+        ggplot(., aes(x = word, y = n, fill = n)) +
+        geom_col() +
+        coord_flip() +
+        geom_label(aes(x = word, y = n, label = n), 
+                   vjust = "top", hjust = "center",
+                   fill = "white", color = "black", 
+                   size = 3) +
+        labs(title = "Hyppigheden for ordenes forekomst i teksten", 
+             subtitle = paste("Det samlede antal ord i korporaet er:", words_sum), 
+             x = "Ord", 
+             y = "Hyppighed", 
+             fill = "Hyppighed")
+      #H.C Andersen - vis enkelte tekster
+    } else if (input$text_data_plot == "H.C Andersens eventyr" & input$selected_corpora_or_text == "Tekster"){
       selected_text_data_plot %>%
         group_by(title) %>% 
-        slice_max(n, n = slice_size) %>%
+        slice_max(n, n = slice_size, with_ties = FALSE) %>%
         ungroup() %>% 
         ggplot(., aes(x = word, y = n, fill = n)) +
         geom_col() +
@@ -320,11 +355,32 @@ server <- function(input, output, session) {
                    vjust = "top", hjust = "center",
                    fill = "white", color = "black", 
                    size = 3) +
-        labs(title = "Hyppigheden for ordenes forekomst i teksten", subtitle = paste("Det samlede antal ord i korporaet er:", words_sum), x = "Ord", y = "Hyppighed", fill = "Hyppighed")
-    } else if (input$text_data_plot == "Jane Austens Romaner"){
+        labs(title = "Hyppigheden for ordenes forekomst i teksten", 
+             subtitle = paste("Det samlede antal ord i korporaet er:", words_sum), 
+             x = "Ord", 
+             y = "Hyppighed", 
+             fill = "Hyppighed")
+      #H.C Andersen - vis hele korpora
+    } else if (input$text_data_plot == "H.C Andersens eventyr" & input$selected_corpora_or_text == "Hele korpora"){
+        selected_text_data_plot %>%
+          slice_max(n, n = slice_size, with_ties = FALSE) %>%
+          ggplot(., aes(x = word, y = n, fill = n)) +
+          geom_col() +
+          coord_flip() +
+          geom_label(aes(x = word, y = n, label = n), 
+                     vjust = "top", hjust = "center",
+                     fill = "white", color = "black", 
+                     size = 3) +
+          labs(title = "Hyppigheden for ordenes forekomst i teksten", 
+               subtitle = paste("Det samlede antal ord i korporaet er:", words_sum), 
+               x = "Ord", 
+               y = "Hyppighed", 
+               fill = "Hyppighed")
+      #Jane Austen - vis enkelte tekster
+    } else if (input$text_data_plot == "Jane Austens Romaner" & input$selected_corpora_or_text == "Tekster"){
       selected_text_data_plot %>%
         group_by(book) %>% 
-        slice_max(n, n = slice_size) %>%
+        slice_max(n, n = slice_size, with_ties = FALSE) %>%
         ungroup() %>% 
         ggplot(., aes(x = word, y = n, fill = n)) +
         geom_col() +
@@ -334,9 +390,29 @@ server <- function(input, output, session) {
                    vjust = "top", hjust = "center",
                    fill = "white", color = "black", 
                    size = 3) +
-        labs(title = "Hyppigheden for ordenes forekomst i teksten", subtitle = paste("Det samlede antal ord i korporaet er:", words_sum), x = "Ord", y = "Hyppighed", fill = "Hyppighed")
+        labs(title = "Hyppigheden for ordenes forekomst i teksten", 
+             subtitle = paste("Det samlede antal ord i korporaet er:", words_sum), 
+             x = "Ord", 
+             y = "Hyppighed", 
+             fill = "Hyppighed")
+      #Jane Austen - vis hele korpora
+    } else if (input$text_data_plot == "Jane Austens Romaner" & input$selected_corpora_or_text == "Hele korpora"){
+      selected_text_data_plot %>%
+        slice_max(n, n = slice_size, with_ties = FALSE) %>%
+        ggplot(., aes(x = word, y = n, fill = n)) +
+        geom_col() +
+        coord_flip() +
+        geom_label(aes(x = word, y = n, label = n), 
+                   vjust = "top", hjust = "center",
+                   fill = "white", color = "black", 
+                   size = 3) +
+        labs(title = "Hyppigheden for ordenes forekomst i teksten", 
+             subtitle = paste("Det samlede antal ord i korporaet er:", words_sum), 
+             x = "Ord", 
+             y = "Hyppighed", 
+             fill = "Hyppighed")
     } else {
-      #Visualisering af søjlediagram
+      #Visualisering af søjlediagram for resterende tekster
       selected_text_data_plot %>%
         head(slice_size) %>%
         ggplot(., aes(x = word, y = n, fill = n)) +
@@ -346,7 +422,11 @@ server <- function(input, output, session) {
                    vjust = "top", hjust = "center",
                    fill = "white", color = "black", 
                    size = 3) +
-        labs(title = "Hyppigheden for ordenes forekomst i teksten", subtitle = paste("Det samlede antal ord i teksten er:", words_sum), x = "Ord", y = "Hyppighed", fill = "Hyppighed")
+        labs(title = "Hyppigheden for ordenes forekomst i teksten", 
+             subtitle = paste("Det samlede antal ord i teksten er:", words_sum), 
+             x = "Ord", 
+             y = "Hyppighed", 
+             fill = "Hyppighed")
     }
     
   })
