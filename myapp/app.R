@@ -26,14 +26,6 @@ library(janeaustenr)
 #Valg af data fra Gutenberg pakken i R. 
 #Teksterne er alle uden ophavsret og kan yderligere findes i data mappen
 
-#Indlæs Frankenstein fra Data mappen
-load("Data/Frankenstein_data.RData")
-#Indlæs A Tale of Two Cities fra Data mappen
-load("Data/A_Tale_of_Two_data.RData")
-#Indlæs The Great Gatsby fra Data mappen
-load("Data/Great_Gatsby_data.RData")
-#Indlæs Moby Dick fra Data mappen
-load("Data/Moby_Dick_data.RData")
 #Indlæs Brother Grimm fra Data mappen
 load("Data/Grimm_Brothers_corpus.RData")
 #Indlæs H.C Andersen fra Data mappen
@@ -41,26 +33,8 @@ load("Data/HC_Andersen_corpus.RData")
 #Indlæs Jane Austens romaner (stammer fra biblioteket janeaustenr)
 Austen_corpora <- austen_books()
 
-#-------------------------------------Stopwords----------------------------------------
-#Lav en ny liste indeholdene selvvalgte stopord
-my_stop_words <- data.frame(word = c("project", "gutenberg"))
-
 #-------------------------------------Databehandling-----------------------------------
 #Klargør data til data mining
-
-#Lav kolonne med lijenummer samt kapitlet, hvor linjen indgår i 
-#Frankenstein
-Frankenstein_pre_tidy <- Frankenstein %>%
-  mutate(linenumber = row_number(),
-         chapter = cumsum(str_detect(text,
-                                     regex("^chapter [\\d0-9]",
-                                           ignore_case = TRUE))))
-#A Tale of two Cities
-A_Tale_of_Two_pre_tidy <- A_Tale_of_Two %>%
-  mutate(linenumber = row_number(),
-         chapter = cumsum(str_detect(text,
-                                     regex("^chapter [\\divxlc]",
-                                           ignore_case = TRUE))))
 # Jane Austen corpora
 Austen_corpora_pre_tidy <- Austen_corpora %>%
   group_by(book) %>% 
@@ -70,52 +44,31 @@ Austen_corpora_pre_tidy <- Austen_corpora %>%
                                            ignore_case = TRUE)))) %>% 
   ungroup()
 
+#Fjern ord indeholdende infomation fra metadata
+remove_metadata_words <- data.frame(word = c("project", "gutenberg"))
+
 #Opdel tekst til enkelte ord samt fjern stopord
-#Tidy af Frankenstein - stopord fjernes
-tidy_Frankenstein <- Frankenstein %>%
-  unnest_tokens(word, text) %>%
-  anti_join(stop_words)
-
-#Tidy af A Tale of Two Cities - stopord fjernes
-tidy_A_Tale_of_Two <- A_Tale_of_Two %>%
-  unnest_tokens(word, text) %>%
-  anti_join(stop_words)
-
-#Tidy af The Great Gatsby - stopord fjernes
-tidy_Great_Gatsby <- Great_Gatsby %>%
-  unnest_tokens(word, text) %>%
-  anti_join(stop_words)
-
-#Tidy af Moby Dick - stopord fjernes
-tidy_Moby_Dick <- Moby_Dick %>%
-  unnest_tokens(word, text) %>%
-  anti_join(stop_words)
 
 #Tidy af HC Andersen
 tidy_HC_Andersen <- HC_Andersen_corpus %>% 
   unnest_tokens(word, text) %>% 
-  anti_join(stop_words)
+  anti_join(stop_words) %>%
+  anti_join(remove_metadata_words, by = "word")
+  
 
 #Tidy af Brother Grimm
 tidy_Grimm_Brothers <- Grimm_Brothers_corpus %>% 
   unnest_tokens(word, text) %>% 
   anti_join(stop_words) %>% 
-  anti_join(my_stop_words, by = "word")
+  anti_join(remove_metadata_words, by = "word")
 
 #Tidy af Austen
 tidy_Austen <- Austen_corpora_pre_tidy %>% 
   unnest_tokens(word, text) %>% 
-  anti_join(stop_words)
+  anti_join(stop_words) %>% 
+  anti_join(remove_metadata_words, by = "word")
 
 #Lav en tidy version af teksterne, hvor stopordene stadig er i dataen
-tidy_Frankenstein_with_stopwords <- Frankenstein %>%
-  unnest_tokens(word, text)
-tidy_A_Tale_of_Two_with_stopwords <- A_Tale_of_Two %>%
-  unnest_tokens(word, text)
-tidy_Great_Gatsby_with_stopwords <- Great_Gatsby %>%
-  unnest_tokens(word, text)
-tidy_Moby_Dick_with_stopwords <- Moby_Dick %>% 
-  unnest_tokens(word, text)
 tidy_HC_Andersen_with_stopwords <- HC_Andersen_corpus %>% 
   unnest_tokens(word, text)
 tidy_Grimm_Brothers_with_stopwords <- Grimm_Brothers_corpus %>% 
@@ -124,26 +77,6 @@ tidy_Austen_with_stopwords <- Austen_corpora %>%
   unnest_tokens(word, text)
 
 #Tilføj kolonnen n, der indeholder ords fremkomst, til dataframe
-#Frankenstein
-sorted_tidy_Frankenstein <- tidy_Frankenstein %>%
-  count(word, sort = TRUE) %>%
-  mutate(word = reorder(word, n)) %>% 
-  ungroup()
-#A Tale of Two Cities
-sorted_tidy_A_Tale_of_Two <- tidy_A_Tale_of_Two %>%
-  count(word, sort = TRUE) %>%
-  mutate(word = reorder(word, n)) %>% 
-  ungroup()
-#The Great Gatsby
-sorted_tidy_Great_Gatsby<- tidy_Great_Gatsby %>%
-  count(word, sort = TRUE) %>%
-  mutate(word = reorder(word, n)) %>% 
-  ungroup()
-#Moby Dick
-sorted_tidy_Moby_Dick <- tidy_Moby_Dick %>%
-  count(word, sort = TRUE) %>%
-  mutate(word = reorder(word, n)) %>% 
-  ungroup()
 #H.C Andersen
 sorted_tidy_HC_Andersen <- tidy_HC_Andersen %>%
   group_by(title) %>% 
@@ -162,7 +95,10 @@ sorted_tidy_Austen <- tidy_Austen %>%
   count(word, sort = TRUE) %>% 
   mutate(word = reorder(word, n)) %>% 
   ungroup()
-  
+
+#-------------------------------------Stop Words---------------------------------------
+#Lav en ny liste indeholdene selvvalgte stopord
+my_stop_words <- data.frame(word = c(sorted_tidy_Austen$word, sorted_tidy_Grimm_Brothers$word, sorted_tidy_HC_Andersen$word))
 #-----------------------------------Shiny App----------------------------------------------
 
 #---------------------------------- Definer UI---------------------------------------------
@@ -175,6 +111,12 @@ ui <- fluidPage(
       helpText("Brug knapperne til at navigere mellem forskellige visualiseringer"),
       
       br(),
+      selectizeInput(inputId = "remove_word",
+                     label = "Fjern ord fra tekst",
+                     choices = my_stop_words,
+                     selected = NULL,
+                     multiple = TRUE,
+                     options = list(create = TRUE)),
       
       helpText("Info")
 
@@ -193,14 +135,10 @@ ui <- fluidPage(
                               br(),
                               selectInput(inputId = "text_data_read", 
                                    label = "Vælg tekst",
-                                   choices = c("Frankenstein",
-                                               "A Tale of two cities", 
-                                               "The Great Gatsby",
-                                               "Moby Dick",
-                                               "Brødrene Grimms eventyr",
+                                   choices = c("Brødrene Grimms eventyr",
                                                "H.C Andersens eventyr",
                                                "Jane Austens Romaner"),
-                                   selected = "Frankenstein")
+                                   selected = "Jane Austens Romaner")
                        ),
                        br(),
                        column(8,
@@ -216,14 +154,10 @@ ui <- fluidPage(
                        #Definerer funktionen, hvor det er muligt at vælge mellem de forskellige tekster
                        selectInput(inputId = "text_data_plot", 
                                    label = "Vælg text",
-                                   choices = c("Frankenstein",
-                                               "A Tale of two cities", 
-                                               "The Great Gatsby", 
-                                               "Moby Dick",
-                                               "Brødrene Grimms eventyr",
+                                   choices = c("Brødrene Grimms eventyr",
                                                "H.C Andersens eventyr",
                                                "Jane Austens Romaner"),
-                                   selected = "Frankenstein"),
+                                   selected = "Jane Austens Romaner"),
                        br(),
                        radioButtons(inputId = "selected_corpora_or_text",
                                     label = "Vis for hele korpora eller se fordelingen på tekster",
@@ -239,14 +173,10 @@ ui <- fluidPage(
                        #Definerer funktionen, hvor det er muligt at vælge mellem de forskellige tekster
                        selectInput(inputId = "text_data_cloud", 
                                    label = "Vælg text",
-                                   choices = c("Frankenstein",
-                                               "A Tale of two cities", 
-                                               "The Great Gatsby", 
-                                               "Moby Dick",
-                                               "Brødrene Grimms eventyr",
+                                   choices = c("Brødrene Grimms eventyr",
                                                "H.C Andersens eventyr",
                                                "Jane Austens Romaner"), 
-                                   selected = "Frankenstein"),
+                                   selected = "Jane Austens Romaner"),
                        sliderInput(inputId = "word_freq_cloud", 
                                    label = "Vælg antal ord i visualiseringen mellem 5 og 30",
                                    min =5, max = 30, value = 20, step = 5),
@@ -258,6 +188,9 @@ ui <- fluidPage(
 #---------------------- Definer server logic -------------------------------------------
 server <- function(input, output, session) {
   
+  
+  #Fjern ord fra tekst
+  updateSelectizeInput(session, "remove_word", server = TRUE)
 #--------------------------- Læs_tekst -------------------------------------------------
   
   #Får output til at matche input når der skiftes mellem teksterne
@@ -265,19 +198,11 @@ server <- function(input, output, session) {
     #Skift mellem tekster med og uden stopord, alt efter hvilken knap, der er aktiveret
     if (input$selected_stopword_view == "Med"){
       selected_text_data_read <- switch(input$text_data_read,
-                                        "Frankenstein" = tidy_Frankenstein_with_stopwords,
-                                        "A Tale of two cities" = tidy_A_Tale_of_Two_with_stopwords,
-                                        "The Great Gatsby" = tidy_Great_Gatsby_with_stopwords,
-                                        "Moby Dick" = tidy_Moby_Dick_with_stopwords,
                                         "Brødrene Grimms eventyr" = tidy_Grimm_Brothers_with_stopwords,
                                         "H.C Andersens eventyr" = tidy_HC_Andersen_with_stopwords,
                                         "Jane Austens Romaner" = tidy_Austen_with_stopwords)
     } else if (input$selected_stopword_view == "Uden"){
       selected_text_data_read <- switch(input$text_data_read,
-                                        "Frankenstein" = tidy_Frankenstein,
-                                        "A Tale of two cities" = tidy_A_Tale_of_Two,
-                                        "The Great Gatsby" = tidy_Great_Gatsby,
-                                        "Moby Dick" = tidy_Moby_Dick,
                                         "Brødrene Grimms eventyr" = tidy_Grimm_Brothers,
                                         "H.C Andersens eventyr" = tidy_HC_Andersen,
                                         "Jane Austens Romaner" = tidy_Austen)
@@ -292,10 +217,6 @@ server <- function(input, output, session) {
   #Får output til at matche input når der skiftes mellem teksterne
   output$viz_plot <- renderPlot({
     selected_text_data_plot <- switch(input$text_data_plot,
-                   "Frankenstein" = sorted_tidy_Frankenstein,
-                   "A Tale of two cities" = sorted_tidy_A_Tale_of_Two,
-                   "The Great Gatsby" = sorted_tidy_Great_Gatsby,
-                   "Moby Dick" = sorted_tidy_Moby_Dick,
                    "Brødrene Grimms eventyr" = sorted_tidy_Grimm_Brothers,
                    "H.C Andersens eventyr" = sorted_tidy_HC_Andersen,
                    "Jane Austens Romaner" = sorted_tidy_Austen)
@@ -435,10 +356,6 @@ server <- function(input, output, session) {
   output$viz_wordcloud <- renderPlot({
     #Får output til at matche input når der skiftes mellem teksterne
     selected_text_data_cloud <- switch(input$text_data_cloud,
-                                       "Frankenstein" = sorted_tidy_Frankenstein,
-                                       "A Tale of two cities" = sorted_tidy_A_Tale_of_Two,
-                                       "The Great Gatsby" = sorted_tidy_Great_Gatsby,
-                                       "Moby Dick" = sorted_tidy_Moby_Dick,
                                        "Brødrene Grimms eventyr" = sorted_tidy_Grimm_Brothers,
                                        "H.C Andersens eventyr" = sorted_tidy_HC_Andersen,
                                        "Jane Austens Romaner" = sorted_tidy_Austen)
