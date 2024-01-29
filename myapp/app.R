@@ -99,6 +99,12 @@ sorted_tidy_Austen <- tidy_Austen %>%
 #-------------------------------------Stop Words---------------------------------------
 #Lav en ny liste indeholdene selvvalgte stopord
 my_stop_words <- data.frame(word = c(sorted_tidy_Austen$word, sorted_tidy_Grimm_Brothers$word, sorted_tidy_HC_Andersen$word))
+
+#Lav en dataframe, hvor værdierne fra remove_word gemmes
+remove_word_column <- c("word")
+remove_word_df <- data.frame(matrix(nrow = 0, ncol = length(remove_word_column)))
+colnames(remove_word_df) = remove_word_column
+
 #-----------------------------------Shiny App----------------------------------------------
 
 #---------------------------------- Definer UI---------------------------------------------
@@ -112,12 +118,14 @@ ui <- fluidPage(
       
       br(),
       selectizeInput(inputId = "remove_word",
-                     label = "Fjern ord fra tekst",
-                     choices = my_stop_words,
+                     label = "Søg og fjern ord fra tekst",
+                     choices = c(Choose=" ", my_stop_words),
                      selected = NULL,
                      multiple = TRUE,
-                     options = list(create = TRUE)),
-      
+                     options = list(
+                       maxOptions = 5, 
+                       create = TRUE)),
+      br(),
       helpText("Info")
 
         
@@ -185,13 +193,25 @@ ui <- fluidPage(
 )
 )
   
-#---------------------- Definer server logic -------------------------------------------
+#------------------------- Definer server logic -------------------------------------------
 server <- function(input, output, session) {
   
+#------------------------ Fjern ord fra korpora -------------------------------------------
+  #Lav dataframe reaktiv
+  remove_word_df <- reactiveVal(remove_word_df)
+  #Definerer at de ord, der skal fjernes fra teksten stammer fra inputtet
+  removed_word <- reactive({
+    req(input$remove_word)
+    data.frame(word = input$remove_word)
+  })
+  #Tilføj data til dataframe
+  observeEvent(input$remove_word, {
+    temp_df <- rbind(remove_word_df(), removed_word())
+    remove_word_df(temp_df)
+  })
   
-  #Fjern ord fra tekst
-  updateSelectizeInput(session, "remove_word", server = TRUE)
-#--------------------------- Læs_tekst -------------------------------------------------
+  
+#----------------------------Læs_tekst ----------------------------------------------------
   
   #Får output til at matche input når der skiftes mellem teksterne
   output$viz_text <- renderText({
@@ -210,6 +230,7 @@ server <- function(input, output, session) {
     
     #Visualisering af den fulde tekst
     head(selected_text_data_read$word, 1000)
+      
   })
   
 #------------------------ Søjlediagram --------------------------------------------------
