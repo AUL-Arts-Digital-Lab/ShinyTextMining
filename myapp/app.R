@@ -96,9 +96,11 @@ sorted_tidy_Austen <- tidy_Austen %>%
   mutate(word = reorder(word, n)) %>% 
   ungroup() 
 
+
 #-------------------------------------Stop Words---------------------------------------
 #Lav en ny liste indeholdene selvvalgte stopord
 my_stop_words <- data.frame(word = c(sorted_tidy_Austen$word, sorted_tidy_Grimm_Brothers$word, sorted_tidy_HC_Andersen$word))
+
 
 #-----------------------------------Shiny App----------------------------------------------
 
@@ -122,7 +124,7 @@ ui <- fluidPage(
       verbatimTextOutput("list_removed_word"),
       h3("Info"),
       helpText("Den integrerede stopordsliste stammer fra R pakken tidytext og indeholder ord fra de tre leksika: onix, SMART og snowball."),
-        
+
   ),
   
   mainPanel(
@@ -179,6 +181,7 @@ ui <- fluidPage(
                                                "H.C Andersens eventyr",
                                                "Jane Austens Romaner"), 
                                    selected = "Jane Austens Romaner"),
+
                        br(),
                        radioButtons(inputId = "selected_corpora_or_text_cloud",
                                     label = "Vis for hele korpora eller se fordelingen på tekster",
@@ -186,6 +189,7 @@ ui <- fluidPage(
                                                 "Tekster"),
                                     selected = "Hele korpora"),
                        br(),
+
                        sliderInput(inputId = "word_freq_cloud", 
                                    label = "Vælg antal ord i visualiseringen mellem 5 og 30",
                                    min =5, max = 30, value = 20, step = 5),
@@ -194,10 +198,25 @@ ui <- fluidPage(
 )
 )
   
-#---------------------- Definer server logic -------------------------------------------
+#------------------------- Definer server logic -------------------------------------------
 server <- function(input, output, session) {
   
-#--------------------------- Læs_tekst -------------------------------------------------
+#------------------------ Fjern ord fra korpora -------------------------------------------
+  #Lav dataframe reaktiv
+  remove_word_df <- reactiveVal(remove_word_df)
+  #Definerer at de ord, der skal fjernes fra teksten stammer fra inputtet
+  removed_word <- reactive({
+    req(input$remove_word)
+    data.frame(word = input$remove_word)
+  })
+  #Tilføj data til dataframe
+  observeEvent(input$remove_word, {
+    temp_df <- rbind(remove_word_df(), removed_word())
+    remove_word_df(temp_df)
+  })
+  
+  
+#----------------------------Læs_tekst ----------------------------------------------------
   
   #Får output til at matche input når der skiftes mellem teksterne
   output$viz_text <- renderText({
@@ -225,6 +244,7 @@ server <- function(input, output, session) {
     
     #Visualisering af den fulde tekst
     head(selected_text_data_read$word, 1000)
+      
   })
   
 #------------------------ Søjlediagram --------------------------------------------------
