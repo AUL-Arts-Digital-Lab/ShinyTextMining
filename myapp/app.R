@@ -36,7 +36,7 @@ Austen_corpora <- austen_books()
 #-------------------------------------Databehandling-----------------------------------
 #Klargør data til data mining
 # Jane Austen corpora
-Austen_corpora_pre_tidy <- Austen_corpora %>%
+Austen_corpora_pre_tidy <- Austen_corpora %>% 
   group_by(book) %>% 
   mutate(linenumber = row_number(),
          chapter = cumsum(str_detect(text,
@@ -94,16 +94,13 @@ sorted_tidy_Austen <- tidy_Austen %>%
   group_by(book) %>% 
   count(word, sort = TRUE) %>% 
   mutate(word = reorder(word, n)) %>% 
-  ungroup()
+  ungroup() 
+
 
 #-------------------------------------Stop Words---------------------------------------
 #Lav en ny liste indeholdene selvvalgte stopord
 my_stop_words <- data.frame(word = c(sorted_tidy_Austen$word, sorted_tidy_Grimm_Brothers$word, sorted_tidy_HC_Andersen$word))
 
-#Lav en dataframe, hvor værdierne fra remove_word gemmes
-remove_word_column <- c("word")
-remove_word_df <- data.frame(matrix(nrow = 0, ncol = length(remove_word_column)))
-colnames(remove_word_df) = remove_word_column
 
 #-----------------------------------Shiny App----------------------------------------------
 
@@ -118,17 +115,16 @@ ui <- fluidPage(
       
       br(),
       selectizeInput(inputId = "remove_word",
-                     label = "Søg og fjern ord fra tekst",
-                     choices = c(Choose=" ", my_stop_words),
+                     label = "Søg for at fjerne ord fra tekst",
+                     choices = c("choose" = "", my_stop_words),
                      selected = NULL,
                      multiple = TRUE,
-                     options = list(
-                       maxOptions = 5, 
-                       create = TRUE)),
-      br(),
-      helpText("Info")
+                     options = list(placeholder = "", create = TRUE)),
+      #Liste til selvvalgte stopord
+      verbatimTextOutput("list_removed_word"),
+      h3("Info"),
+      helpText("Den integrerede stopordsliste stammer fra R pakken tidytext og indeholder ord fra de tre leksika: onix, SMART og snowball."),
 
-        
   ),
   
   mainPanel(
@@ -185,6 +181,15 @@ ui <- fluidPage(
                                                "H.C Andersens eventyr",
                                                "Jane Austens Romaner"), 
                                    selected = "Jane Austens Romaner"),
+
+                       br(),
+                       radioButtons(inputId = "selected_corpora_or_text_cloud",
+                                    label = "Vis for hele korpora eller se fordelingen på tekster",
+                                    choices = c("Hele korpora",
+                                                "Tekster"),
+                                    selected = "Hele korpora"),
+                       br(),
+
                        sliderInput(inputId = "word_freq_cloud", 
                                    label = "Vælg antal ord i visualiseringen mellem 5 og 30",
                                    min =5, max = 30, value = 20, step = 5),
@@ -227,6 +232,15 @@ server <- function(input, output, session) {
                                         "H.C Andersens eventyr" = tidy_HC_Andersen,
                                         "Jane Austens Romaner" = tidy_Austen)
     }
+   
+    #Definerer at ordet, der ønskes fjernet fra teksten kommer fra inputtet herfor
+    remove_word <- input$remove_word
+    #Sorterer selvalgt stopord fra den valgte tekst
+    if (!is.null(remove_word)){
+      selected_text_data_read <- selected_text_data_read %>% 
+        filter(!word %in% remove_word) 
+    }
+  
     
     #Visualisering af den fulde tekst
     head(selected_text_data_read$word, 1000)
@@ -246,6 +260,13 @@ server <- function(input, output, session) {
     slice_size <- input$slice_size
     #Definerer udregningen for det samlede antal ord i en tekst
     words_sum <- sum(as.numeric(selected_text_data_plot$n))
+    #Definerer at ordet, der ønskes fjernet fra teksten kommer fra inputtet herfor
+    remove_word <- input$remove_word
+    #Sorterer selvalgt stopord fra den valgte tekst
+    if (!is.null(remove_word)){
+      selected_text_data_plot <- selected_text_data_plot %>% 
+        filter(!word %in% remove_word) 
+    }
     
     #Visualiseringer af søjlediagram baseret på hele korpora eller enkelte tekster
     #Brødrende Grimm - vis enkelte tekster
@@ -267,6 +288,7 @@ server <- function(input, output, session) {
              x = "Ord", 
              y = "Hyppighed", 
              fill = "Hyppighed")
+      
     #Brødrende Grimm - vis hele korpora 
   } else if (input$text_data_plot == "Brødrene Grimms eventyr" & input$selected_corpora_or_text == "Hele korpora"){
       selected_text_data_plot %>%
@@ -283,6 +305,7 @@ server <- function(input, output, session) {
              x = "Ord", 
              y = "Hyppighed", 
              fill = "Hyppighed")
+    
       #H.C Andersen - vis enkelte tekster
     } else if (input$text_data_plot == "H.C Andersens eventyr" & input$selected_corpora_or_text == "Tekster"){
       selected_text_data_plot %>%
@@ -302,6 +325,7 @@ server <- function(input, output, session) {
              x = "Ord", 
              y = "Hyppighed", 
              fill = "Hyppighed")
+      
       #H.C Andersen - vis hele korpora
     } else if (input$text_data_plot == "H.C Andersens eventyr" & input$selected_corpora_or_text == "Hele korpora"){
         selected_text_data_plot %>%
@@ -318,6 +342,7 @@ server <- function(input, output, session) {
                x = "Ord", 
                y = "Hyppighed", 
                fill = "Hyppighed")
+      
       #Jane Austen - vis enkelte tekster
     } else if (input$text_data_plot == "Jane Austens Romaner" & input$selected_corpora_or_text == "Tekster"){
       selected_text_data_plot %>%
@@ -337,6 +362,7 @@ server <- function(input, output, session) {
              x = "Ord", 
              y = "Hyppighed", 
              fill = "Hyppighed")
+      
       #Jane Austen - vis hele korpora
     } else if (input$text_data_plot == "Jane Austens Romaner" & input$selected_corpora_or_text == "Hele korpora"){
       selected_text_data_plot %>%
@@ -381,20 +407,87 @@ server <- function(input, output, session) {
                                        "H.C Andersens eventyr" = sorted_tidy_HC_Andersen,
                                        "Jane Austens Romaner" = sorted_tidy_Austen)
     
+    #Definerer at antal, der ønskes vist, kommer fra inputtet herfor
     word_freq_cloud <- input$word_freq_cloud
-    
-    #Visualisering af wordcloud
+    #Definerer at ordet, der ønskes fjernet fra teksten, kommer fra inputtet herfor
+    remove_word <- input$remove_word
+    #Sorterer selvalgt stopord fra den valgte tekst
+    if (!is.null(remove_word)){
+      selected_text_data_cloud <- selected_text_data_cloud %>% 
+        filter(!word %in% remove_word) 
+    }
+    #Visualiseringer af  wordcloud baseret på hele korpora eller enkelte tekster
+    #Brødrende Grimm - vis enkelte tekster
+    if (input$text_data_cloud == "Brødrene Grimms eventyr" & input$selected_corpora_or_text_cloud == "Tekster"){
+      selected_text_data_cloud %>%
+        group_by(title) %>% 
+        slice_max(n, n = word_freq_cloud) %>%
+        ungroup() %>% 
+        ggplot(aes(label = word, size = n, color = n)) +
+        geom_text_wordcloud() +
+        facet_wrap(~title) +
+        theme_minimal() +
+        scale_size_area(max_size = 12) +
+        scale_color_gradient(low = "lightblue", high = "darkblue")
+      
+      #Brødrende Grimm - vis hele korpora
+    } else if (input$text_data_cloud == "Brødrene Grimms eventyr" & input$selected_corpora_or_text_cloud == "Hele korpora"){
     selected_text_data_cloud %>%
-      head(word_freq_cloud) %>% 
+      slice_max(n, n = word_freq_cloud) %>%
       ggplot(aes(label = word, size = n, color = n)) +
       geom_text_wordcloud() +
       theme_minimal() +
       scale_size_area(max_size = 12) +
       scale_color_gradient(low = "lightblue", high = "darkblue")
+    
+    #H.C Andersen - vis enkelte tekster
+  } else if (input$text_data_cloud == "H.C Andersens eventyr" & input$selected_corpora_or_text_cloud == "Tekster"){
+    selected_text_data_cloud %>%
+      group_by(title) %>% 
+      slice_max(n, n = word_freq_cloud) %>%
+      ungroup() %>% 
+      ggplot(aes(label = word, size = n, color = n)) +
+      geom_text_wordcloud() +
+      facet_wrap(~title) +
+      theme_minimal() +
+      scale_size_area(max_size = 12) +
+      scale_color_gradient(low = "lightblue", high = "darkblue")
+    
+    #H.C Andersen - vis hele korpora
+  } else if (input$text_data_cloud == "H.C Andersens eventyr" & input$selected_corpora_or_text_cloud == "Hele korpora"){
+    selected_text_data_cloud %>%
+      slice_max(n, n = word_freq_cloud) %>%
+      ggplot(aes(label = word, size = n, color = n)) +
+      geom_text_wordcloud() +
+      theme_minimal() +
+      scale_size_area(max_size = 12) +
+      scale_color_gradient(low = "lightblue", high = "darkblue")
+    
+    #Jane Austen - vis enkelte tekster
+  } else if (input$text_data_cloud == "Jane Austens Romaner" & input$selected_corpora_or_text_cloud == "Tekster"){
+    selected_text_data_cloud %>%
+      group_by(book) %>% 
+      slice_max(n, n = word_freq_cloud) %>%
+      ungroup() %>% 
+      ggplot(aes(label = word, size = n, color = n)) +
+      geom_text_wordcloud() +
+      facet_wrap(~book) +
+      theme_minimal() +
+      scale_size_area(max_size = 12) +
+      scale_color_gradient(low = "lightblue", high = "darkblue")
+    
+    #Jane Austen - vis hele korpora
+  } else if (input$text_data_cloud == "Jane Austens Romaner" & input$selected_corpora_or_text_cloud == "Hele korpora"){
+    selected_text_data_cloud %>%
+      slice_max(n, n = word_freq_cloud) %>%
+      ggplot(aes(label = word, size = n, color = n)) +
+      geom_text_wordcloud() +
+      theme_minimal() +
+      scale_size_area(max_size = 12) +
+      scale_color_gradient(low = "lightblue", high = "darkblue")
+  }
   })
-  
 }
-
 #--------------------------- Kør appen ------------------------------------------------------
 shinyApp(ui = ui, server = server)
 
