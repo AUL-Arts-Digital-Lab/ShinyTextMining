@@ -7,9 +7,7 @@
 #install.packages("ggplot2")
 #install.packages("tidytext")
 #install.packages("dplyr")
-#install.packages("gutenbergr")
 #install.packages("ggwordcloud")
-#install.package("janeaustenr")
 
 #Hent biblioteker
 library(shiny)
@@ -17,44 +15,34 @@ library(tidyverse)
 library(ggplot2)
 library(tidytext)
 library(dplyr)
-library(gutenbergr)
 library(ggwordcloud)
-library(janeaustenr)
+library(quanteda)
 
 #-------------------------------------Dataindsamling-----------------------------------
 
-#Valg af data fra Gutenberg pakken i R. 
+#Valg af data fra Project Gutenberg
 #Teksterne er alle uden ophavsret og kan yderligere findes i data mappen
 
 #Indlæs Brother Grimm fra Data mappen
 load("Data/Grimm_Brothers_corpus.RData")
 #Indlæs H.C Andersen fra Data mappen
 load("Data/HC_Andersen_corpus.RData")
-#Indlæs Jane Austens romaner (stammer fra biblioteket janeaustenr)
-Austen_corpora <- austen_books()
+#Indlæs Jane Austens fra Data mappen
+load("Data/Austen_corpus.RData")
 
-#-------------------------------------Databehandling-----------------------------------
-#Klargør data til data mining
-# Jane Austen corpora
-Austen_corpora_pre_tidy <- Austen_corpora %>% 
-  group_by(book) %>% 
-  mutate(linenumber = row_number(),
-         chapter = cumsum(str_detect(text,
-                                     regex("^chapter [\\divxlc]",
-                                           ignore_case = TRUE)))) %>% 
-  ungroup()
+#-------------------------------------Dataforberedelse-----------------------------------
 
 #Fjern ord indeholdende infomation fra metadata
 remove_metadata_words <- data.frame(word = c("project", "gutenberg"))
 
-#Opdel tekst til enkelte ord samt fjern stopord
+#------------------------------------ Forbered tidy ---------------------------------------
 
+#Opdel tekst til enkelte ord samt fjern stopord
 #Tidy af HC Andersen
 tidy_HC_Andersen <- HC_Andersen_corpus %>% 
   unnest_tokens(word, text) %>% 
   anti_join(stop_words) %>%
   anti_join(remove_metadata_words, by = "word")
-  
 
 #Tidy af Brother Grimm
 tidy_Grimm_Brothers <- Grimm_Brothers_corpus %>% 
@@ -63,7 +51,7 @@ tidy_Grimm_Brothers <- Grimm_Brothers_corpus %>%
   anti_join(remove_metadata_words, by = "word")
 
 #Tidy af Austen
-tidy_Austen <- Austen_corpora_pre_tidy %>% 
+tidy_Austen <- Austen_corpus %>% 
   unnest_tokens(word, text) %>% 
   anti_join(stop_words) %>% 
   anti_join(remove_metadata_words, by = "word")
@@ -73,8 +61,33 @@ tidy_HC_Andersen_with_stopwords <- HC_Andersen_corpus %>%
   unnest_tokens(word, text)
 tidy_Grimm_Brothers_with_stopwords <- Grimm_Brothers_corpus %>% 
   unnest_tokens(word, text)
-tidy_Austen_with_stopwords <- Austen_corpora %>%
+tidy_Austen_with_stopwords <- Austen_corpus %>%
   unnest_tokens(word, text)
+
+#------------------------------------ Forbered quanteda ------------------------------------
+
+#Lav en corpus version af teksterne, der passer til quanteda pakken
+HC_Andersen_context_corpus <- corpus(HC_Andersen_corpus)
+Grimm_Brothers_context_corpus <- corpus(Grimm_Brothers_corpus)
+Austen_context_corpus <- corpus(Austen_corpus)
+                                     
+#Rediger docnames til title, så de bliver meningsfulde og identificerbare
+#HC Andersen
+HC_docid <- paste(HC_Andersen_corpus$title)
+docnames(HC_Andersen_context_corpus) <- HC_docid
+#Brother Grimm
+Grimm_docid <- paste(Grimm_Brothers_corpus$title)
+docnames(Grimm_Brothers_context_corpus) <- Grimm_docid
+#Austen
+Austen_docid <- paste(Austen_corpus$title)
+docnames(Austen_context_corpus) <- Austen_docid
+
+#Tokenize korpus teksterne
+HC_Andersen_context_corpus <- tokens(HC_Andersen_context_corpus, remove_separators = TRUE)
+Grimm_Brothers_context_corpus <- tokens(Grimm_Brothers_context_corpus, remove_separators = TRUE)
+Austen_context_corpus <- tokens(Austen_context_corpus, remove_separators = TRUE)
+
+#---------------------------------- Databehandling -----------------------------------------------
 
 #Tilføj kolonnen n, der indeholder ords fremkomst, til dataframe
 #H.C Andersen
@@ -91,7 +104,7 @@ sorted_tidy_Grimm_Brothers <- tidy_Grimm_Brothers %>%
   ungroup()
 #Austen
 sorted_tidy_Austen <- tidy_Austen %>% 
-  group_by(book) %>% 
+  group_by(title) %>% 
   count(word, sort = TRUE) %>% 
   mutate(word = reorder(word, n)) %>% 
   ungroup() 
@@ -142,17 +155,41 @@ ui <- fluidPage(
                                    choices = c("Brødrene Grimms eventyr",
                                                "H.C Andersens eventyr",
                                                "Jane Austens Romaner"),
-                                   selected = "Jane Austens Romaner")
-                       ),
+                                   selected = "Jane Austens Romaner")),
                        br(),
                        column(8,
                        radioButtons(inputId = "selected_stopword_view", 
                                     label = "Se tekst med eller uden stopord",
                                     choices = c("Med", "Uden"), 
-                                    selected = "Med")
-                       ),
+                                    selected = "Med")),
                        br(),
                        textOutput("viz_text")),
+              tabPanel("Kontekst",
+                       br(),
+                       h4("Info"),
+                       helpText("Se de ord, der optæder før og efter det/de fremsøgte ord"),
+                       helpText("docname = titlen på teksten,
+                                from og to = beskriver placeringen af ordet eller frasen i sætningen,
+                                pre og post = konteksten ordet optræder i, dvs. ordene, der står før og efter det/de fremsøgte ord,
+                                keyword = det fremsøgte ord og hvordan det står skrevet i teksten,
+                                pattern = selve inputtet"),
+                       #Definerer funktionen, hvor det er muligt at vælge mellem de forskellige tekster
+                       selectInput(inputId = "text_data_context", 
+                                   label = "Vælg text",
+                                   choices = c("Brødrene Grimms eventyr",
+                                               "H.C Andersens eventyr",
+                                               "Jane Austens Romaner"), 
+                                   selected = "Jane Austens Romaner"),
+                       br(),
+                       #Definerer funktionen, der gør det muligt at fremsøge et keyword
+                       textInput(inputId = "select_kwic",
+                                 label = "Søg for at se konteksten ordet eller frasen optræder i",
+                                 value = ""),
+                       br(),
+                       sliderInput(inputId = "window_context", 
+                                   label = "Vælg størrelsen på konteksten, dvs. antallet af ord før og efter søgeordet",
+                                   min =1, max = 50, value = 1, step = 1),
+                       tableOutput("viz_context")),
               tabPanel("Søjlediagram",
                        br(),
                        #Definerer funktionen, hvor det er muligt at vælge mellem de forskellige tekster
@@ -193,7 +230,8 @@ ui <- fluidPage(
                        sliderInput(inputId = "word_freq_cloud", 
                                    label = "Vælg antal ord i visualiseringen mellem 5 og 30",
                                    min =5, max = 30, value = 20, step = 5),
-                       plotOutput("viz_wordcloud")))
+                       plotOutput("viz_wordcloud"))),
+   
   )
 )
 )
@@ -214,7 +252,6 @@ server <- function(input, output, session) {
     temp_df <- rbind(remove_word_df(), removed_word())
     remove_word_df(temp_df)
   })
-  
   
 #----------------------------Læs_tekst ----------------------------------------------------
   
@@ -240,13 +277,28 @@ server <- function(input, output, session) {
       selected_text_data_read <- selected_text_data_read %>% 
         filter(!word %in% remove_word) 
     }
-  
     
     #Visualisering af den fulde tekst
     head(selected_text_data_read$word, 1000)
       
   })
   
+#------------------------ Kontekst --------------------------------------------------
+    
+  #Visualisering af kwic som tabel
+    output$viz_context <- renderTable({
+      #Får output til at matche input når der skiftes mellem teksterne
+      selected_text_data_context <- switch(input$text_data_context,
+                                           "Brødrene Grimms eventyr" = Grimm_Brothers_context_corpus,
+                                           "H.C Andersens eventyr" = HC_Andersen_context_corpus,
+                                           "Jane Austens Romaner" = Austen_context_corpus)
+      #Definerer at antal ord, der ønskes vist, kommer fra inputtet herfor
+      window_context <- input$window_context
+      #Definerer at keyworded kommer fra inputtet herfor
+      select_kwic <- input$select_kwic
+      kwic(selected_text_data_context, pattern = phrase(select_kwic), window = window_context)
+
+  })
 #------------------------ Søjlediagram --------------------------------------------------
   
   #Får output til at matche input når der skiftes mellem teksterne
@@ -284,7 +336,7 @@ server <- function(input, output, session) {
                     fill = "white", color = "black", 
                     size = 3) +
         labs(title = "Hyppigheden for ordenes forekomst i teksten", 
-             subtitle = paste("Det samlede antal ord i korporaet er:", words_sum), 
+             subtitle = paste("Det samlede antal ord i korporaet (uden stopord) er:", words_sum), 
              x = "Ord", 
              y = "Hyppighed", 
              fill = "Hyppighed")
@@ -301,7 +353,7 @@ server <- function(input, output, session) {
                    fill = "white", color = "black", 
                    size = 3) +
         labs(title = "Hyppigheden for ordenes forekomst i teksten", 
-             subtitle = paste("Det samlede antal ord i korporaet er:", words_sum), 
+             subtitle = paste("Det samlede antal ord i korporaet (uden stopord) er:", words_sum), 
              x = "Ord", 
              y = "Hyppighed", 
              fill = "Hyppighed")
@@ -321,7 +373,7 @@ server <- function(input, output, session) {
                    fill = "white", color = "black", 
                    size = 3) +
         labs(title = "Hyppigheden for ordenes forekomst i teksten", 
-             subtitle = paste("Det samlede antal ord i korporaet er:", words_sum), 
+             subtitle = paste("Det samlede antal ord i korporaet (uden stopord) er:", words_sum), 
              x = "Ord", 
              y = "Hyppighed", 
              fill = "Hyppighed")
@@ -338,7 +390,7 @@ server <- function(input, output, session) {
                      fill = "white", color = "black", 
                      size = 3) +
           labs(title = "Hyppigheden for ordenes forekomst i teksten", 
-               subtitle = paste("Det samlede antal ord i korporaet er:", words_sum), 
+               subtitle = paste("Det samlede antal ord i korporaet (uden stopord) er:", words_sum), 
                x = "Ord", 
                y = "Hyppighed", 
                fill = "Hyppighed")
@@ -346,19 +398,19 @@ server <- function(input, output, session) {
       #Jane Austen - vis enkelte tekster
     } else if (input$text_data_plot == "Jane Austens Romaner" & input$selected_corpora_or_text == "Tekster"){
       selected_text_data_plot %>%
-        group_by(book) %>% 
+        group_by(title) %>% 
         slice_max(n, n = slice_size, with_ties = FALSE) %>%
         ungroup() %>% 
         ggplot(., aes(x = word, y = n, fill = n)) +
         geom_col() +
-        facet_wrap( ~ book, ncol = 3, scales = "free") +
+        facet_wrap( ~ title, ncol = 3, scales = "free") +
         coord_flip() +
         geom_label(aes(x = word, y = n, label = n), 
                    vjust = "top", hjust = "center",
                    fill = "white", color = "black", 
                    size = 3) +
         labs(title = "Hyppigheden for ordenes forekomst i teksten", 
-             subtitle = paste("Det samlede antal ord i korporaet er:", words_sum), 
+             subtitle = paste("Det samlede antal ord i korporaet (uden stopord) er:", words_sum), 
              x = "Ord", 
              y = "Hyppighed", 
              fill = "Hyppighed")
@@ -375,7 +427,7 @@ server <- function(input, output, session) {
                    fill = "white", color = "black", 
                    size = 3) +
         labs(title = "Hyppigheden for ordenes forekomst i teksten", 
-             subtitle = paste("Det samlede antal ord i korporaet er:", words_sum), 
+             subtitle = paste("Det samlede antal ord i korporaet (uden stopord) er:", words_sum), 
              x = "Ord", 
              y = "Hyppighed", 
              fill = "Hyppighed")
@@ -391,7 +443,7 @@ server <- function(input, output, session) {
                    fill = "white", color = "black", 
                    size = 3) +
         labs(title = "Hyppigheden for ordenes forekomst i teksten", 
-             subtitle = paste("Det samlede antal ord i teksten er:", words_sum), 
+             subtitle = paste("Det samlede antal ord i teksten (uden stopord) er:", words_sum), 
              x = "Ord", 
              y = "Hyppighed", 
              fill = "Hyppighed")
@@ -466,12 +518,12 @@ server <- function(input, output, session) {
     #Jane Austen - vis enkelte tekster
   } else if (input$text_data_cloud == "Jane Austens Romaner" & input$selected_corpora_or_text_cloud == "Tekster"){
     selected_text_data_cloud %>%
-      group_by(book) %>% 
+      group_by(title) %>% 
       slice_max(n, n = word_freq_cloud) %>%
       ungroup() %>% 
       ggplot(aes(label = word, size = n, color = n)) +
       geom_text_wordcloud() +
-      facet_wrap(~book) +
+      facet_wrap(~title) +
       theme_minimal() +
       scale_size_area(max_size = 12) +
       scale_color_gradient(low = "lightblue", high = "darkblue")
