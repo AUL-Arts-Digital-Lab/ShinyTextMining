@@ -110,10 +110,9 @@ sorted_tidy_Austen <- tidy_Austen %>%
   ungroup() 
 
 
-#-------------------------------------Stop Words---------------------------------------
+#------------------------------------- Stop Words ---------------------------------------
 #Lav en ny liste indeholdene selvvalgte stopord
 my_stop_words <- data.frame(word = c(sorted_tidy_Austen$word, sorted_tidy_Grimm_Brothers$word, sorted_tidy_HC_Andersen$word))
-
 
 #-----------------------------------Shiny App----------------------------------------------
 
@@ -239,7 +238,7 @@ ui <- fluidPage(
 #------------------------- Definer server logic -------------------------------------------
 server <- function(input, output, session) {
   
-#------------------------ Fjern ord fra korpora -------------------------------------------
+#------------------------ Fjern ord fra korpora --------------------------------------------
   #Lav dataframe reaktiv
   remove_word_df <- reactiveVal()
   #Definerer at de ord, der skal fjernes fra teksten stammer fra inputtet
