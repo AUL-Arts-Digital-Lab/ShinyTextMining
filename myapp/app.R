@@ -241,7 +241,7 @@ server <- function(input, output, session) {
   
 #------------------------ Fjern ord fra korpora -------------------------------------------
   #Lav dataframe reaktiv
-  remove_word_df <- reactiveVal(remove_word_df)
+  remove_word_df <- reactiveVal()
   #Definerer at de ord, der skal fjernes fra teksten stammer fra inputtet
   removed_word <- reactive({
     req(input$remove_word)
