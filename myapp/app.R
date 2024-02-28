@@ -207,29 +207,33 @@ ui <- fluidPage(
               tabPanel("Kontekst",
                        br(),
                        h4("Info"),
-                       helpText("Se de ord, der optæder før og efter det/de fremsøgte ord"),
+                       helpText("Søg for at se konteksten ordet eller frasen optræder i"),
                        helpText("docname = titlen på teksten,
                                 from og to = beskriver placeringen af ordet eller frasen i sætningen,
                                 pre og post = konteksten ordet optræder i, dvs. ordene, der står før og efter det/de fremsøgte ord,
                                 keyword = det fremsøgte ord og hvordan det står skrevet i teksten,
                                 pattern = selve inputtet"),
+                       column(3,
                        #Definerer funktionen, hvor det er muligt at vælge mellem de forskellige tekster
                        selectInput(inputId = "text_data_context", 
                                    label = "Vælg text",
                                    choices = c("Brødrene Grimms eventyr",
                                                "H.C Andersens eventyr",
                                                "Jane Austens Romaner"), 
-                                   selected = "Jane Austens Romaner"),
-                       br(),
+                                   selected = "Jane Austens Romaner")),
+                       column(3,
                        #Definerer funktionen, der gør det muligt at fremsøge et keyword
                        textInput(inputId = "select_kwic",
-                                 label = "Søg for at se konteksten ordet eller frasen optræder i",
-                                 value = ""),
-                       br(),
+                                 label = "Søg efter ord eller frase",
+                                 value = "")),
+                       column(3,
                        sliderInput(inputId = "window_context", 
-                                   label = "Vælg størrelsen på konteksten, dvs. antallet af ord før og efter søgeordet",
-                                   min =1, max = 50, value = 1, step = 1),
-                       tableOutput("viz_context"))),
+                                   label = "Vælg antallet af ord før og efter søgeordet",
+                                   min =1, max = 50, value = 1, step = 1)),
+                       column(3, textOutput("text_doc_sum"),
+                              textOutput("text_token_sum"),
+                              textOutput("text_token_unique")),
+                       dataTableOutput("viz_context"))),
    
   )
 )
@@ -285,7 +289,7 @@ server <- function(input, output, session) {
 #------------------------ Kontekst --------------------------------------------------
     
   #Visualisering af kwic som tabel
-    output$viz_context <- renderTable({
+    output$viz_context <- renderDataTable({
       #Får output til at matche input når der skiftes mellem teksterne
       selected_text_data_context <- switch(input$text_data_context,
                                            "Brødrene Grimms eventyr" = Grimm_Brothers_context_corpus,
@@ -293,8 +297,19 @@ server <- function(input, output, session) {
                                            "Jane Austens Romaner" = Austen_context_corpus)
       #Definerer at antal ord, der ønskes vist, kommer fra inputtet herfor
       window_context <- input$window_context
+      #Antal documenter i korporaet
+      doc_sum <- ndoc(selected_text_data_context)
+      output$text_doc_sum <- renderText({paste("Antal dokumenter:", doc_sum)})
+      #Antal tokens i alt
+      token_sum <- sum(ntoken(selected_text_data_context, remove_punct = TRUE))
+      output$text_token_sum <- renderText({paste("Ord i alt:", token_sum)})
+      #Antal unikke tokens
+      token_unique <- sum(ntype(selected_text_data_context, remove_punct = TRUE))
+      output$text_token_unique <- renderText({paste("Antal unikke ord:", token_unique)})
+      
       #Definerer at keyworded kommer fra inputtet herfor
       select_kwic <- input$select_kwic
+      #KWIC visualisering
       kwic(selected_text_data_context, pattern = phrase(select_kwic), window = window_context)
 
   })
