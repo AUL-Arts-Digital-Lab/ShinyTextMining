@@ -185,12 +185,13 @@ ui <- fluidPage(
                        plotOutput("viz_plot")), 
               tabPanel("Wordcloud",
                        #Definerer funktionen, hvor det er muligt at vælge mellem de forskellige tekster
+                       column(3,
                        selectInput(inputId = "text_data_cloud", 
                                    label = "Vælg text",
                                    choices = c("Brødrene Grimms eventyr",
                                                "H.C Andersens eventyr",
                                                "Jane Austens Romaner"), 
-                                   selected = "Jane Austens Romaner"),
+                                   selected = "Jane Austens Romaner")),
 
                        column(3,
                        radioButtons(inputId = "selected_corpora_or_text_cloud",
