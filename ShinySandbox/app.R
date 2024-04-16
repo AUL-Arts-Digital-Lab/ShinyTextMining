@@ -3,7 +3,6 @@
 
 #Hent biblioteker
 library(shiny)
-library(bslib)
 library(tidyverse)
 library(ggplot2)
 library(ggraph)
@@ -69,7 +68,8 @@ tidy_Austen <- Austen_corpus %>%
 #Tidy af st. Croix
 tidy_Croix <- Croix_corpus %>% 
   unnest_tokens(word, text) %>% 
-  anti_join(stop_words)
+  anti_join(stop_words) %>% 
+  anti_join(stop_words_da)
 
 #Lav en tidy version af teksterne, hvor stopordene stadig er i dataen
 tidy_HC_Andersen_en_with_stopwords <- HC_Andersen_corpus %>% 
