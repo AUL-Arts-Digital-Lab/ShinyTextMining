@@ -565,7 +565,7 @@ output$viz_wordcloud <- renderPlot({
   
 #--------------------------- Begrebsafklaring ------------------------------------------------
   output$term_info_text_1 <- renderText({
-    paste("Her kan du uploade en eller flere filer, der fungere som corpus i visualiseringerne. Filerne skal være i txt format.")
+    paste("Her kan du uploade en eller flere filer, der fungere som corpus i visualiseringerne. Filerne skal være i txt eller pdf format.")
   })
   
   output$term_info_text_2 <- renderText({
