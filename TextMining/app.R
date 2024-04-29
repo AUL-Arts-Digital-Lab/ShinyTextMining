@@ -2,19 +2,18 @@
 #-----------------------------------Anvendte biblioteker-----------------------------------
 
 #Hent biblioteker
-library(shiny)
-library(readtext)
-library(thematic)
-library(bslib)
-library(tidyverse)
-library(ggplot2)
-library(ggraph)
-library(igraph)
-library(tidytext)
-library(dplyr)
-library(ggwordcloud)
-library(quanteda)
-
+library(shiny) #https://cran.r-project.org/web/packages/shiny/index.html
+library(thematic) #https://cran.rstudio.com/web/packages/thematic/index.html
+library(readtext) #https://cran.r-project.org/web/packages/readtext/index.html
+library(dplyr) #https://cran.r-project.org/web/packages/dplyr/index.html 
+library(tidyverse) #https://cran.r-project.org/web/packages/tidyverse/index.html
+library(tidytext) #https://cran.r-project.org/web/packages/tidytext/index.html
+library(quanteda) #https://cran.r-project.org/web/packages/quanteda/index.html
+library(quanteda.textstats) #https://cran.r-project.org/web/packages/quanteda.textstats/index.html
+library(ggplot2) #https://cran.r-project.org/web/packages/ggplot2/index.html
+library(ggraph) #https://cran.r-project.org/web/packages/ggraph/index.html
+library(igraph) #https://cran.r-project.org/web/packages/igraph/index.html 
+library(ggwordcloud) #https://cran.r-project.org/web/packages/ggwordcloud/index.html
 
 #------------------------------------- Stop words -------------------------------------------
 
@@ -28,9 +27,16 @@ my_stop_words <- data.frame(word = c("miss", "mrs", "sir", "mr"))
 #---------------------------------- Definer UI-----------------------------------------------
 
 ui <- fluidPage(
-  titlePanel("Text Mining"),
+  tags$head(
+    tags$link(rel = "stylesheet", type = "text/css", href = "shinyLayout.css")
+  ),   
+  
+  titlePanel(title = span(tags$img(src = "logo-digital.svg"),
+                          br(),
+                          br(), 
+                          "Text Mining")),
   thematic::thematic_shiny(),
-  tags$img(src = "DKB_logo.png", heigth = 50, width = 150, align = "right"),
+  
   
   sidebarLayout(
     sidebarPanel(width = 3,
@@ -55,18 +61,27 @@ ui <- fluidPage(
                                 multiple = TRUE,
                                 options = list(placeholder = "", create = TRUE)),
                  #Liste til selvvalgte stopord
-                 verbatimTextOutput("list_removed_word"),
-                 h3("Stopord"),
-                 helpText("Den integrerede stopordsliste til engelske tekster stammer fra R pakken tidytext og indeholder ord fra de tre leksika: onix, SMART og snowball."),
-    ),
+                 verbatimTextOutput("list_removed_word")),
     mainPanel(
       #Danner et menu-layout, hvor det er muligt at skifte mellem visualiseringerne
       tabsetPanel(type = "tabs",
+                  tabPanel("Summary",
+                           br(),
+                           h4("Info"),
+                           helpText("På denne side får du et overblik over corpus"),
+                           br(),
+                                  textOutput("text_doc_sum"),
+                                  br(),
+                                  textOutput("text_token_sum"),
+                                  br(),
+                                  textOutput("text_token_unique"),
+                                  br(),
+                                  dataTableOutput("text_token_sum_doc")),
                   tabPanel("Nærlæs tekst",
                            br(),
                            h4("Info"),
                            helpText("Visualiseringen gør det muligt at se tekster, hvor stopord enten er fjernet eller stadig optræder i teksten."),
-                           column(6,
+                           column(12,
                                   br(),
                                   radioButtons(inputId = "selected_stopword_view", 
                                                label = "Se tekst med eller uden stopord",
@@ -136,12 +151,43 @@ ui <- fluidPage(
                                   sliderInput(inputId = "window_context", 
                                               label = "Vælg antallet af ord før og efter søgeordet",
                                               min =1, max = 50, value = 1, step = 1)),
-                           column(3,
                                   br(),
-                                  textOutput("text_doc_sum"),
-                                  textOutput("text_token_sum"),
-                                  textOutput("text_token_unique")),
-                           dataTableOutput("viz_context"))
+                                  dataTableOutput("viz_context")),
+                  tabPanel("Begrebsafklaring",
+                           br(),
+                           h4("Info"),
+                           helpText("På denne side finder du definitioner og forklaringer på de begreber og visualiseringer, der bliver anvendt i applikationen"),
+                           br(),
+                           h4("Upload filer:"),
+                           textOutput("term_info_text_1"),
+                           br(),
+                           h4("Stopord:"),
+                           textOutput("term_info_text_2"),
+                           br(),
+                           h4("Vælg sprog for stopordsliste:"),
+                           textOutput("term_info_text_3"),
+                           br(),
+                           h4("Søg for at fjerne ord fra teksten:"),
+                           textOutput("term_info_text_4"),
+                           br(),
+                           h4("Summary:"),
+                           textOutput("term_info_text_10"),
+                           br(),
+                           h4("Nærlæs tekst:"),
+                           textOutput("term_info_text_5"),
+                           br(),
+                           h4("Søjlediagram:"),
+                           textOutput("term_info_text_6"),
+                           br(),
+                           h4("Wordcloud:"),
+                           textOutput("term_info_text_7"),
+                           br(),
+                           h4("Bigrams:"),
+                           textOutput("term_info_text_8"),
+                           br(),
+                           h4("Kontekst:"),
+                           textOutput("term_info_text_9"),
+                           br())
 
       )
     )
@@ -170,11 +216,12 @@ server <- function(input, output) {
   
   #Tidy version uden stopord (engelsk)
   tidy_corpus <- reactive({
+    req(input$files)
     #Læs teksten fra txt filerne
-    tibbles_of_texts <<- map_df(input$files$datapath, readtext) %>% 
+    tibbles_of_texts <- map_df(input$files$datapath, readtext) %>% 
       mutate(title = str_remove(input$files$name, ".txt"))
     #Forbind de enkelte filer/tekster i en dataframe
-    raw_corpus <<- bind_rows(tibbles_of_texts)
+    raw_corpus <- bind_rows(tibbles_of_texts)
     raw_corpus %>% 
       unnest_tokens(word, text) %>% 
       anti_join(stop_words)
@@ -182,11 +229,12 @@ server <- function(input, output) {
   
   #Tidy version uden stopord (dansk)
   tidy_corpus_da <- reactive({
+    req(input$files)
     #Læs teksten fra txt filerne
-    tibbles_of_texts <<- map_df(input$files$datapath, readtext) %>% 
+    tibbles_of_texts <- map_df(input$files$datapath, readtext) %>% 
       mutate(title = str_remove(input$files$name, ".txt"))
     #Forbind de enkelte filer/tekster i en dataframe
-    raw_corpus <<- bind_rows(tibbles_of_texts)
+    raw_corpus <- bind_rows(tibbles_of_texts)
     raw_corpus %>% 
       unnest_tokens(word, text) %>% 
       anti_join(stop_words_da)
@@ -194,22 +242,24 @@ server <- function(input, output) {
   
   #Tidy version med stopord
   tidy_corpus_with_stopwords <- reactive({
+    req(input$files)
     #Læs teksten fra txt filerne
-    tibbles_of_texts <<- map_df(input$files$datapath, readtext) %>% 
+    tibbles_of_texts <- map_df(input$files$datapath, readtext) %>% 
       mutate(title = str_remove(input$files$name, ".txt"))
     #Forbind de enkelte filer/tekster i en dataframe
-    raw_corpus <<- bind_rows(tibbles_of_texts)
+    raw_corpus <- bind_rows(tibbles_of_texts)
     raw_corpus %>% 
       unnest_tokens(word, text)
   })
   
   #Forbered tidy version af bigrams (engelsk)
   tidy_bigram <- reactive({
+    req(input$files)
     #Læs teksten fra txt filerne
-    tibbles_of_texts <<- map_df(input$files$datapath, readtext) %>% 
+    tibbles_of_texts <- map_df(input$files$datapath, readtext) %>% 
       mutate(title = str_remove(input$files$name, ".txt"))
     #Forbind de enkelte filer/tekster i en dataframe
-    raw_corpus <<- bind_rows(tibbles_of_texts)
+    raw_corpus <- bind_rows(tibbles_of_texts)
     raw_corpus %>% 
       unnest_tokens(bigram, text, token = "ngrams", n = 2) %>%
       filter(!is.na(bigram)) %>% 
@@ -220,11 +270,12 @@ server <- function(input, output) {
   
   #Forbered tidy version af bigrams (dansk)
   tidy_bigram_da <- reactive({
+    req(input$files)
     #Læs teksten fra txt filerne
-    tibbles_of_texts <<- map_df(input$files$datapath, readtext) %>% 
+    tibbles_of_texts <- map_df(input$files$datapath, readtext) %>% 
       mutate(title = str_remove(input$files$name, ".txt"))
     #Forbind de enkelte filer/tekster i en dataframe
-    raw_corpus <<- bind_rows(tibbles_of_texts)
+    raw_corpus <- bind_rows(tibbles_of_texts)
     raw_corpus %>% 
       unnest_tokens(bigram, text, token = "ngrams", n = 2) %>%
       filter(!is.na(bigram)) %>% 
@@ -235,18 +286,71 @@ server <- function(input, output) {
   
   #Lav en corpus version af teksterne, der passer til quanteda pakken
   context_corpus <- reactive({
-    tibbles_of_texts <<- map_df(input$files$datapath, readtext) %>% 
+    req(input$files)
+    tibbles_of_texts <- map_df(input$files$datapath, readtext) %>% 
       mutate(title = str_remove(input$files$name, ".txt"))
     #Forbind de enkelte filer/tekster i en dataframe
-    raw_corpus <<- bind_rows(tibbles_of_texts)
+    raw_corpus <- bind_rows(tibbles_of_texts)
     #Lav corpus
-    create_corpus <<- corpus(raw_corpus)
+    create_corpus <- corpus(raw_corpus)
     #Rediger docnames til title, så de bliver meningsfulde og identificerbare
     context_docid <- paste(raw_corpus$title)
     docnames(create_corpus) <- context_docid
     #Tokenize corpus teksterne
     create_corpus <- tokens(create_corpus, remove_separators = TRUE)
   })
+  
+  #Lav en corpus version af teksterne, der passer til quanteda pakkens readability funktion
+  context_corpus_LIX <- reactive({
+    req(input$files)
+    tibbles_of_texts <- map_df(input$files$datapath, readtext)
+    #Forbind de enkelte filer/tekster i en dataframe
+    raw_corpus <- bind_rows(tibbles_of_texts)
+    #Lav corpus
+    create_corpus <- corpus(raw_corpus)
+  })
+
+#---------------------------- Summary ---------------------------------------------------------
+  
+  #Får output til at matche input når der skiftes mellem teksterne
+  output$text_token_sum_doc <- renderDataTable({
+    selected_text_data_sum <- context_corpus()
+    selected_text_data_sum_LIX <- context_corpus_LIX()
+    
+    #Definerer at ordet, der ønskes fjernet fra teksten kommer fra inputtet herfor
+    remove_word <- input$remove_word
+    #Sorterer selvalgt stopord fra den valgte tekst
+    if (!is.null(remove_word)){
+      selected_text_data_sum <- selected_text_data_sum %>% 
+        filter(!word %in% remove_word) 
+    }
+    #Antal documenter i korporaet
+    doc_sum <- ndoc(selected_text_data_sum)
+    output$text_doc_sum <- renderText({paste("Antal tekster i corpus: ", doc_sum)})
+    #Antal tokens i alt
+    token_sum <- sum(ntoken(selected_text_data_sum, remove_punct = TRUE))
+    output$text_token_sum <- renderText({paste("Samlet antal ord i corpus: ", token_sum)})
+    #Antal unikke tokens
+    token_unique <- sum(ntype(selected_text_data_sum, remove_punct = TRUE))
+    output$text_token_unique <- renderText({paste("Antal unikke ord i corpus: ", token_unique)})
+    #Antal ord i de forskellige tekster
+    tokens_in_texts <- ntoken(selected_text_data_sum, remove_punct = TRUE)
+    
+    #LIX beregning for de forskellige tekster
+    LIX <- textstat_readability(selected_text_data_sum_LIX, "LIW", min_sentence_length = 2)
+    
+    #Lav en data frame over antal ord i hver tekst
+    text_info_df <- data.frame(docnames(selected_text_data_sum), tokens_in_texts, LIX)
+    #Fjern ekstra kolonne med information om tekstens placering i corpus
+    text_info_df <- subset(text_info_df, select = -document)
+    
+    #Ændrer navnet på kolonnerne
+    names(text_info_df)[1] <- "Tekst"
+    names(text_info_df)[2] <- "Antal ord"
+    names(text_info_df)[3] <- "LIX"
+    text_info_df
+  })
+  
   
 #---------------------------- Nærlæs_tekst ----------------------------------------------------
   
@@ -309,7 +413,7 @@ server <- function(input, output) {
                word = reorder_within(word, n, title)) %>% 
         ggplot(aes(x = word, y = n, fill = n)) +
         geom_col() +
-        facet_wrap( ~ title, ncol = 5, scales = "free") +
+        facet_wrap( ~ title, ncol = 3, scales = "free") +
         coord_flip() +
         scale_x_reordered() +
         geom_label(aes(x = word, y = n, label = n), 
@@ -442,15 +546,6 @@ output$viz_wordcloud <- renderPlot({
       
     #Definerer at antal ord, der ønskes vist, kommer fra inputtet herfor
     window_context <- input$window_context
-    #Antal documenter i korporaet
-    doc_sum <- ndoc(selected_text_data_context)
-    output$text_doc_sum <- renderText({paste("Antal dokumenter:", doc_sum)})
-    #Antal tokens i alt
-    token_sum <- sum(ntoken(selected_text_data_context, remove_punct = TRUE))
-    output$text_token_sum <- renderText({paste("Ord i alt:", token_sum)})
-    #Antal unikke tokens
-    token_unique <- sum(ntype(selected_text_data_context, remove_punct = TRUE))
-    output$text_token_unique <- renderText({paste("Antal unikke ord:", token_unique)})
     
     #Definerer at ordet, der ønskes fjernet fra teksten kommer fra inputtet herfor
     remove_word <- input$remove_word
@@ -466,7 +561,50 @@ output$viz_wordcloud <- renderPlot({
     kwic(selected_text_data_context, pattern = phrase(select_kwic), window = window_context)
     
   })
+  
+  
+#--------------------------- Begrebsafklaring ------------------------------------------------
+  output$term_info_text_1 <- renderText({
+    paste("Her kan du uploade en eller flere filer, der fungere som corpus i visualiseringerne. Filerne skal være i txt format.")
+  })
+  
+  output$term_info_text_2 <- renderText({
+    paste("Stopord er de ord, der optræder i en text eller et corpus uden at være meningsgivende herfor. Dvs. ord som de danske ord 'og', 'i', 'at' og de engelske ord 'the', 'a', 'an' etc.")
+  })
+  
+  output$term_info_text_3 <- renderText({
+    paste("Stopordslisterne indeholder henholdsvis engelske og danske stopord. Den integrerede stopordsliste til engelske tekster stammer fra R pakken tidytext og indeholder ord fra de tre leksika: onix, SMART og snowball. Stopordslisten til de danske tekster er udarbejdet af informationsspecialister ved Det Kgl. Bibliotek. Begge stopordslister kan findes i mappen Stopwords. ")
+  })
+  
+  output$term_info_text_4 <- renderText({
+    paste("Fjern ord fra teksten, der ikke i forvejen er registreret som stopord, men derimod ord, der ikke er relevant for det pågældende corpus eller analyse.")
+  })
+  
+  output$term_info_text_5 <- renderText({
+    paste("I denne visualisering vises et tekstuddrag svarende til 1000 ord for det pågældende corpus. Her er det muligt at se en tekst med eller uden stopord. Dette er med til at illustrere, hvilken betydning det kan have for et corpus og dets indhold, når stopord fjernes.")
+  })
+  
+  output$term_info_text_6 <- renderText({
+    paste("I denne visualisering vises de hyppigst forekommende ord og antallet af disse forekomster som et søjlegram. Her er det muligt at se de hyppigst forekommende ord for hele corpus eller fordelt på enkelte tekster. Det er muligt at justere, hvor mange ord, der skal vises i visualiseringen - ønskes de hyppigste fem, ti eller tyve ord vist i visualiseringen.")
+  })
+  
+  output$term_info_text_7 <- renderText({
+    paste("I denne visualisering vises de hyppigst forekommende ord og antallet af disse forekomster som en ordsky. Her er det muligt at se de hyppigst forekommende ord for hele corpus eller fordelt på enkelte tekster. Det er muligt at justere, hvor mange ord, der skal vises i visualiseringen - ønskes de hyppigste fem, ti eller tyve ord vist i visualiseringen. Jo større et ord er i visualiseringen, des flere gange forekommer det i corpus eller i den enkelte tekst.")
+  })
+  
+  output$term_info_text_8 <- renderText({
+    paste("I denne visualisering vises ordpar, der forekommer i corpus. Her er det muligt at ændre minimumsforekomsten af et ordpar i visualiseringen - et ordpar forekommer mindst fem, ti eller tyve gange i corpus, før det vises i visualiseringen. Pilene markerer rækkefølgen ordene optræder i - peger pilen fra 'a' til 'b', står 'a' før 'b' i ordparet.")
+  })
+  
+  output$term_info_text_9 <- renderText({
+    paste("I denne visualiseringen vises konteksten, hvori et ord eller en frase optræder i. Denne metode indenfor text mining kaldes Key Word in Context (KWIC). Det er muligt at søge efter et enkelt ord eller en frase bestående af flere ord. Derudover er det muligt at anvende * i sin søgning. Dette vil give flere resultater, da man her kan søge efter alle endelser og ikke udelukkende det fremsøgte ord - søger man efter ordet 'træ' efterfulgt af * (træ*), vil man få resultater med træet, træer, træerne etc. Kolonnen 'docname' beskriver titlen på den tekst i corpus, hvor ordet og konteksten optræder. Navnet er efterfulgt af et tal, der giver en mere specifik beskrivelse af, hvor ordet eller frasen står. Kolonnerne 'from' og 'to' beskriver placeringen af ordet eller frasen i sætningen og er først relevant, når man er interesseret i deres specifikke placering. Kolonnerne 'pre' og 'post' beskriver konteksten ordet optræder i, dvs. ordene, der står før og efter det/de fremsøgte ord. Kolonnen 'keyword' indeholder informationer om det fremsøgte ord og hvordan det står skrevet i teksten. Kolonnen 'pattern' indeholder selve inputtet. Det er muligt at se det fremsøgte ords eller frases hyppighed i corpus nederst i tabellens venstre hjørne - her står det beskrevet som entries. ")
+  })
+  
+  output$term_info_text_10 <- renderText({
+    paste("Viser en oversigt over det pågældende corpus. Antallet af dokumenter, der optæder i corpus. Antal ord i corpus samt antal ord i de enkelte tekster. Antal unikke ord er en udregning af, hvor mange forskellige ord, der optræder i corpus. På den måde tæller hvert enkelt ord kun for en og er ikke påvirket af, om det optræder i corpus en eller flere gange. Lixtal er en beregning af en teksts sværhedsgrad i forhold til læsbarhed. Definitionen på LIX er fra Björnsson (1968). Udregningen af LIX er lavet ved følgende formel: ASL + ((100 * Nwsy >= 7)/Nw). Her er ASL = Average sentence length (dvs. det samlede antal ord divideret med antallet af sætninger), Nw = number of words og Nwsy = number of word syllables. Denne er er målrettet >= 7 (dvs. ord på mere end seks bogstaver). I udregningen anvendes yderligere et parameter: min_sentence_length = 2. Dette parameter har til formål at definere minimumslængden for en sætning på baggrund af antallet af ord. Her er en sætning defineret som det, der står foran et punktum. Ved at sætte grænsen ved to frem for en, undgår vi at tælle 'falske' sætninger med. Dvs. at sætninger der eksempelvis starter med '1.000' eller 'H.C. Andersen' ikke bliver anset som sætninger.")
+  })
 }
+
 #--------------------------- Kør appen ------------------------------------------------------
 shinyApp(ui, server)
 
