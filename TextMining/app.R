@@ -217,9 +217,10 @@ server <- function(input, output) {
   #Tidy version uden stopord (engelsk)
   tidy_corpus <- reactive({
     req(input$files)
-    #Læs teksten fra txt filerne
+    #Læs teksten fra filerne
     tibbles_of_texts <- map_df(input$files$datapath, readtext) %>% 
-      mutate(title = str_remove(input$files$name, ".txt"))
+      mutate(title = str_remove(input$files$name, ".txt")) %>% 
+      mutate(title = str_remove(input$files$name, ".pdf"))
     #Forbind de enkelte filer/tekster i en dataframe
     raw_corpus <- bind_rows(tibbles_of_texts)
     raw_corpus %>% 
@@ -230,9 +231,10 @@ server <- function(input, output) {
   #Tidy version uden stopord (dansk)
   tidy_corpus_da <- reactive({
     req(input$files)
-    #Læs teksten fra txt filerne
+    #Læs teksten fra filerne
     tibbles_of_texts <- map_df(input$files$datapath, readtext) %>% 
-      mutate(title = str_remove(input$files$name, ".txt"))
+      mutate(title = str_remove(input$files$name, ".txt")) %>% 
+      mutate(title = str_remove(input$files$name, ".pdf"))
     #Forbind de enkelte filer/tekster i en dataframe
     raw_corpus <- bind_rows(tibbles_of_texts)
     raw_corpus %>% 
@@ -245,7 +247,8 @@ server <- function(input, output) {
     req(input$files)
     #Læs teksten fra txt filerne
     tibbles_of_texts <- map_df(input$files$datapath, readtext) %>% 
-      mutate(title = str_remove(input$files$name, ".txt"))
+      mutate(title = str_remove(input$files$name, ".txt")) %>% 
+      mutate(title = str_remove(input$files$name, ".pdf"))
     #Forbind de enkelte filer/tekster i en dataframe
     raw_corpus <- bind_rows(tibbles_of_texts)
     raw_corpus %>% 
@@ -257,7 +260,8 @@ server <- function(input, output) {
     req(input$files)
     #Læs teksten fra txt filerne
     tibbles_of_texts <- map_df(input$files$datapath, readtext) %>% 
-      mutate(title = str_remove(input$files$name, ".txt"))
+      mutate(title = str_remove(input$files$name, ".txt")) %>% 
+      mutate(title = str_remove(input$files$name, ".pdf"))
     #Forbind de enkelte filer/tekster i en dataframe
     raw_corpus <- bind_rows(tibbles_of_texts)
     raw_corpus %>% 
@@ -273,7 +277,8 @@ server <- function(input, output) {
     req(input$files)
     #Læs teksten fra txt filerne
     tibbles_of_texts <- map_df(input$files$datapath, readtext) %>% 
-      mutate(title = str_remove(input$files$name, ".txt"))
+      mutate(title = str_remove(input$files$name, ".txt")) %>% 
+      mutate(title = str_remove(input$files$name, ".pdf"))
     #Forbind de enkelte filer/tekster i en dataframe
     raw_corpus <- bind_rows(tibbles_of_texts)
     raw_corpus %>% 
@@ -288,7 +293,8 @@ server <- function(input, output) {
   context_corpus <- reactive({
     req(input$files)
     tibbles_of_texts <- map_df(input$files$datapath, readtext) %>% 
-      mutate(title = str_remove(input$files$name, ".txt"))
+      mutate(title = str_remove(input$files$name, ".txt")) %>% 
+      mutate(title = str_remove(input$files$name, ".pdf"))
     #Forbind de enkelte filer/tekster i en dataframe
     raw_corpus <- bind_rows(tibbles_of_texts)
     #Lav corpus
