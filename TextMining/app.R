@@ -32,7 +32,7 @@ ui <- fluidPage(
   ),   
   
   titlePanel(title = span(tags$img(src = "logo-digital.svg"),
-                          br(),
+                          br(),  
                           br(), 
                           "Text Mining")),
   thematic::thematic_shiny(),
