@@ -46,6 +46,13 @@ ui <- fluidPage(
                            label="Upload filer",
                            multiple = TRUE),
                  br(),
+                 #Vælg encoding
+                 radioButtons(inputId = "corpus_encoding",
+                              label = "Vælg encoding for corpus",
+                              choices = c("UTF-8",
+                                          "latin1"),
+                              selected = "UTF-8"),
+                 br(),
                  #Vælg sprog for stopordsliste
                  radioButtons(inputId = "language_stopwords",
                               label = "Vælg sprog for stopordslisten",
@@ -161,6 +168,9 @@ ui <- fluidPage(
                            h4("Upload filer:"),
                            textOutput("term_info_text_1"),
                            br(),
+                           h4("Vælg encoding for corpus:"),
+                           textOutput("term_info_text_11"),
+                           br(),
                            h4("Stopord:"),
                            textOutput("term_info_text_2"),
                            br(),
@@ -223,6 +233,12 @@ server <- function(input, output) {
       mutate(title = str_remove(input$files$name, ".pdf"))
     #Forbind de enkelte filer/tekster i en dataframe
     raw_corpus <- bind_rows(tibbles_of_texts)
+    #Definer encodingen i forhold til læsning af specialtegn
+    if (input$corpus_encoding == "latin1"){
+      Encoding(raw_corpus$text) <- "latin1"
+    } else{
+      Encoding(raw_corpus$text) <- "UTF-8"
+    }
     raw_corpus %>% 
       unnest_tokens(word, text) %>% 
       anti_join(stop_words)
@@ -237,6 +253,12 @@ server <- function(input, output) {
       mutate(title = str_remove(input$files$name, ".pdf"))
     #Forbind de enkelte filer/tekster i en dataframe
     raw_corpus <- bind_rows(tibbles_of_texts)
+    #Definer encodingen i forhold til læsning af specialtegn
+    if (input$corpus_encoding == "latin1"){
+      Encoding(raw_corpus$text) <- "latin1"
+    } else{
+      Encoding(raw_corpus$text) <- "UTF-8"
+    }
     raw_corpus %>% 
       unnest_tokens(word, text) %>% 
       anti_join(stop_words_da)
@@ -251,6 +273,12 @@ server <- function(input, output) {
       mutate(title = str_remove(input$files$name, ".pdf"))
     #Forbind de enkelte filer/tekster i en dataframe
     raw_corpus <- bind_rows(tibbles_of_texts)
+    #Definer encodingen i forhold til læsning af specialtegn
+    if (input$corpus_encoding == "latin1"){
+      Encoding(raw_corpus$text) <- "latin1"
+    } else{
+      Encoding(raw_corpus$text) <- "UTF-8"
+    }
     raw_corpus %>% 
       unnest_tokens(word, text)
   })
@@ -264,6 +292,12 @@ server <- function(input, output) {
       mutate(title = str_remove(input$files$name, ".pdf"))
     #Forbind de enkelte filer/tekster i en dataframe
     raw_corpus <- bind_rows(tibbles_of_texts)
+    #Definer encodingen i forhold til læsning af specialtegn
+    if (input$corpus_encoding == "latin1"){
+      Encoding(raw_corpus$text) <- "latin1"
+    } else{
+      Encoding(raw_corpus$text) <- "UTF-8"
+    }
     raw_corpus %>% 
       unnest_tokens(bigram, text, token = "ngrams", n = 2) %>%
       filter(!is.na(bigram)) %>% 
@@ -281,6 +315,12 @@ server <- function(input, output) {
       mutate(title = str_remove(input$files$name, ".pdf"))
     #Forbind de enkelte filer/tekster i en dataframe
     raw_corpus <- bind_rows(tibbles_of_texts)
+    #Definer encodingen i forhold til læsning af specialtegn
+    if (input$corpus_encoding == "latin1"){
+      Encoding(raw_corpus$text) <- "latin1"
+    } else{
+      Encoding(raw_corpus$text) <- "UTF-8"
+    }
     raw_corpus %>% 
       unnest_tokens(bigram, text, token = "ngrams", n = 2) %>%
       filter(!is.na(bigram)) %>% 
@@ -297,6 +337,12 @@ server <- function(input, output) {
       mutate(title = str_remove(input$files$name, ".pdf"))
     #Forbind de enkelte filer/tekster i en dataframe
     raw_corpus <- bind_rows(tibbles_of_texts)
+    #Definer encodingen i forhold til læsning af specialtegn
+    if (input$corpus_encoding == "latin1"){
+      Encoding(raw_corpus$text) <- "latin1"
+    } else{
+      Encoding(raw_corpus$text) <- "UTF-8"
+    }
     #Lav corpus
     create_corpus <- corpus(raw_corpus)
     #Rediger docnames til title, så de bliver meningsfulde og identificerbare
@@ -309,9 +355,17 @@ server <- function(input, output) {
   #Lav en corpus version af teksterne, der passer til quanteda pakkens readability funktion
   context_corpus_LIX <- reactive({
     req(input$files)
-    tibbles_of_texts <- map_df(input$files$datapath, readtext)
+    tibbles_of_texts <- map_df(input$files$datapath, readtext) %>% 
+      mutate(title = str_remove(input$files$name, ".txt")) %>% 
+      mutate(title = str_remove(input$files$name, ".pdf"))
     #Forbind de enkelte filer/tekster i en dataframe
     raw_corpus <- bind_rows(tibbles_of_texts)
+    #Definer encodingen i forhold til læsning af specialtegn
+    if (input$corpus_encoding == "latin1"){
+      Encoding(raw_corpus$text) <- "latin1"
+    } else{
+      Encoding(raw_corpus$text) <- "UTF-8"
+    }
     #Lav corpus
     create_corpus <- corpus(raw_corpus)
   })
@@ -608,6 +662,10 @@ output$viz_wordcloud <- renderPlot({
   
   output$term_info_text_10 <- renderText({
     paste("Viser en oversigt over det pågældende corpus. Antallet af dokumenter, der optæder i corpus. Antal ord i corpus samt antal ord i de enkelte tekster. Antal unikke ord er en udregning af, hvor mange forskellige ord, der optræder i corpus. På den måde tæller hvert enkelt ord kun for en og er ikke påvirket af, om det optræder i corpus en eller flere gange. Lixtal er en beregning af en teksts sværhedsgrad i forhold til læsbarhed. Definitionen på LIX er fra Björnsson (1968). Udregningen af LIX er lavet ved følgende formel: ASL + ((100 * Nwsy >= 7)/Nw). Her er ASL = Average sentence length (dvs. det samlede antal ord divideret med antallet af sætninger), Nw = number of words og Nwsy = number of word syllables. Denne er er målrettet >= 7 (dvs. ord på mere end seks bogstaver). I udregningen anvendes yderligere et parameter: min_sentence_length = 2. Dette parameter har til formål at definere minimumslængden for en sætning på baggrund af antallet af ord. Her er en sætning defineret som det, der står foran et punktum. Ved at sætte grænsen ved to frem for en, undgår vi at tælle 'falske' sætninger med. Dvs. at sætninger der eksempelvis starter med '1.000' eller 'H.C. Andersen' ikke bliver anset som sætninger.")
+  })
+  
+  output$term_info_text_11 <- renderText({
+    paste("Gør det muligt at vælge mellem forskellige tekst afkodninger. Dette er særligt relevant i forbindelse med tekster indeholdende danske specialtegn: æ, ø og å. Her kan latin1 være en fordel. UTF-8 er den universelle standard for afkoding af tekst, og denne er ofte bedst til engelsksprogede tekster.")
   })
 }
 
