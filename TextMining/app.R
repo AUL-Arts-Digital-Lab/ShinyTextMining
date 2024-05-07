@@ -37,7 +37,6 @@ ui <- fluidPage(
                           "Text Mining")),
   thematic::thematic_shiny(),
   
-  
   sidebarLayout(
     sidebarPanel(width = 3,
                  br(),
@@ -83,7 +82,7 @@ ui <- fluidPage(
                                   br(),
                                   textOutput("text_token_unique"),
                                   br(),
-                                  dataTableOutput("text_token_sum_doc")),
+                           DT::DTOutput("text_token_sum_doc")),
                   tabPanel("Nærlæs tekst",
                            br(),
                            h4("Info"),
@@ -128,7 +127,7 @@ ui <- fluidPage(
                                   br(),
                                   sliderInput(inputId = "word_freq_cloud", 
                                               label = "Vælg antal ord i visualiseringen mellem 5 og 30",
-                                              min =5, max = 30, value = 20, step = 5)),
+                                              min = 5, max = 30, value = 20, step = 5)),
                            plotOutput("viz_wordcloud")),
                   tabPanel("Bigrams",
                            br(),
@@ -157,9 +156,9 @@ ui <- fluidPage(
                                   br(),
                                   sliderInput(inputId = "window_context", 
                                               label = "Vælg antallet af ord før og efter søgeordet",
-                                              min =1, max = 50, value = 1, step = 1)),
+                                              min = 1, max = 50, value = 1, step = 1)),
                                   br(),
-                                  dataTableOutput("viz_context")),
+                           DT::DTOutput("viz_context")),
                   tabPanel("Begrebsafklaring",
                            br(),
                            h4("Info"),
@@ -373,7 +372,7 @@ server <- function(input, output) {
 #---------------------------- Summary ---------------------------------------------------------
   
   #Får output til at matche input når der skiftes mellem teksterne
-  output$text_token_sum_doc <- renderDataTable({
+  output$text_token_sum_doc <- DT::renderDT({
     selected_text_data_sum <- context_corpus()
     selected_text_data_sum_LIX <- context_corpus_LIX()
     
@@ -600,7 +599,7 @@ output$viz_wordcloud <- renderPlot({
   #------------------------ Kontekst --------------------------------------------------
   
   #Visualisering af kwic som tabel
-  output$viz_context <- renderDataTable({
+  output$viz_context <- DT::renderDT({
     #Får output til at matche input når der skiftes mellem teksterne
     selected_text_data_context <- context_corpus()
       
