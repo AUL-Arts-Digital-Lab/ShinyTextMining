@@ -242,7 +242,7 @@ ui <- fluidPage(
                               textOutput("text_token_unique")),
                        br(),
                        br(),
-                       dataTableOutput("text_token_sum_doc")),
+                       DT::DTOutput("text_token_sum_doc")),
               tabPanel("Nærlæs tekst",
                        br(),
                        h4("Info"),
@@ -354,7 +354,7 @@ ui <- fluidPage(
                        sliderInput(inputId = "window_context", 
                                    label = "Vælg antallet af ord før og efter søgeordet",
                                    min =1, max = 50, value = 1, step = 1)),
-                       dataTableOutput("viz_context")),
+                       DT::DTOutput("viz_context")),
               tabPanel("Bigrams",
                        br(),
                        h4("Info"),
@@ -431,7 +431,7 @@ server <- function(input, output, session) {
 #---------------------------- Summary ---------------------------------------------------------
   
   #Får output til at matche input når der skiftes mellem teksterne
-  output$text_token_sum_doc <- renderDataTable({
+  output$text_token_sum_doc <- DT::renderDT({
     selected_text_data_sum <- switch(input$text_data_sum,
                                          "Brødrene Grimms eventyr (engelsk)" = Grimm_Brothers_context_corpus_en,
                                          "Brødrene Grimms eventyr (dansk)" = Grimm_Brothers_context_corpus_da,
@@ -985,7 +985,7 @@ server <- function(input, output, session) {
   #------------------------ Kontekst --------------------------------------------------
   
   #Visualisering af kwic som tabel
-  output$viz_context <- renderDataTable({
+  output$viz_context <- DT::renderDT({
     #Får output til at matche input når der skiftes mellem teksterne
     selected_text_data_context <- switch(input$text_data_context,
                                          "Brødrene Grimms eventyr (engelsk)" = Grimm_Brothers_context_corpus_en,
