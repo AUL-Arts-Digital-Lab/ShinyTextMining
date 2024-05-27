@@ -86,7 +86,7 @@ ui <- fluidPage(
                   tabPanel("Nærlæs tekst",
                            br(),
                            h4("Info"),
-                           helpText("Visualiseringen gør det muligt at se tekster, hvor stopord enten er fjernet eller stadig optræder i teksten."),
+                           helpText("Her er det muligt at se et udsnit fra corpus, hvor stopord enten er fjernet eller stadig optræder."),
                            column(12,
                                   br(),
                                   radioButtons(inputId = "selected_stopword_view", 
@@ -401,7 +401,7 @@ server <- function(input, output) {
     #Lav en data frame over antal ord i hver tekst
     text_info_df <- data.frame(docnames(selected_text_data_sum), tokens_in_texts, LIX)
     #Fjern ekstra kolonne med information om tekstens placering i corpus
-    text_info_df <- subset(text_info_df, select = -document)
+    text_info_df <-  subset(text_info_df, select = -document)
     
     #Ændrer navnet på kolonnerne
     names(text_info_df)[1] <- "Tekst"
