@@ -5,14 +5,11 @@
 library(shiny) #https://cran.r-project.org/web/packages/shiny/index.html
 library(thematic) #https://cran.rstudio.com/web/packages/thematic/index.html
 library(readtext) #https://cran.r-project.org/web/packages/readtext/index.html
-library(dplyr) #https://cran.r-project.org/web/packages/dplyr/index.html 
 library(tidyverse) #https://cran.r-project.org/web/packages/tidyverse/index.html
 library(tidytext) #https://cran.r-project.org/web/packages/tidytext/index.html
 library(quanteda) #https://cran.r-project.org/web/packages/quanteda/index.html
 library(quanteda.textstats) #https://cran.r-project.org/web/packages/quanteda.textstats/index.html
-library(ggplot2) #https://cran.r-project.org/web/packages/ggplot2/index.html
 library(ggraph) #https://cran.r-project.org/web/packages/ggraph/index.html
-library(igraph) #https://cran.r-project.org/web/packages/igraph/index.html 
 library(ggwordcloud) #https://cran.r-project.org/web/packages/ggwordcloud/index.html
 
 
@@ -218,7 +215,7 @@ ui <- fluidPage(
     
     #Danner et menu-layout, hvor det er muligt at skifte mellem visualiseringerne
     tabsetPanel(type = "tabs",
-              tabPanel("Summary",
+              tabPanel("Oversigt",
                        br(),
                        h4("Info"),
                        helpText("På denne side får du et overblik over corpus"),
@@ -389,7 +386,7 @@ ui <- fluidPage(
                        h4("Søg for at fjerne ord fra teksten:"),
                        textOutput("term_info_text_4"),
                        br(),
-                       h4("Summary:"),
+                       h4("Oversigt:"),
                        textOutput("term_info_text_10"),
                        br(),
                        h4("Nærlæs tekst:"),
@@ -428,7 +425,7 @@ server <- function(input, output, session) {
     remove_word_df(temp_df)
   })
 
-#---------------------------- Summary ---------------------------------------------------------
+#---------------------------- Oversigt ---------------------------------------------------------
   
   #Får output til at matche input når der skiftes mellem teksterne
   output$text_token_sum_doc <- DT::renderDT({
@@ -475,9 +472,11 @@ server <- function(input, output, session) {
     #Fjern ekstra kolonne med information om tekstens placering i corpus
     text_info_df <- subset(text_info_df, select = -document)
     #Ændrer navnet på kolonnerne
-    names(text_info_df)[1] <- "Tekst"
     names(text_info_df)[2] <- "Antal ord"
-    #names(text_info_df)[3] <- "LIX"
+    names(text_info_df)[3] <- "LIX"
+    
+    #Fjern ekstra kolonne med samme værdi som tekst kolonnen
+    text_info_df <- subset(text_info_df, select = c("Antal ord", "LIX"))
     text_info_df
   })
   
