@@ -1010,7 +1010,7 @@ server <- function(input, output, session) {
     #KWIC visualisering
     kwic(selected_text_data_context, pattern = phrase(select_kwic), window = window_context)
     
-  })
+  }, options = list(language = list(zeroRecords = "Søg efter ord eller frase for at se resultaterne")))
   
   #------------------------- Bigrams --------------------------------------------------------
   #Visualisering ag Bigrams som netværksgraf

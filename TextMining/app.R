@@ -71,7 +71,7 @@ ui <- fluidPage(
     mainPanel(
       #Danner et menu-layout, hvor det er muligt at skifte mellem visualiseringerne
       tabsetPanel(type = "tabs",
-                  tabPanel("Summary",
+                  tabPanel("Oversigt",
                            br(),
                            h4("Info"),
                            helpText("På denne side får du et overblik over corpus"),
@@ -179,7 +179,7 @@ ui <- fluidPage(
                            h4("Søg for at fjerne ord fra teksten:"),
                            textOutput("term_info_text_4"),
                            br(),
-                           h4("Summary:"),
+                           h4("Oversigt:"),
                            textOutput("term_info_text_10"),
                            br(),
                            h4("Nærlæs tekst:"),
@@ -369,7 +369,7 @@ server <- function(input, output) {
     create_corpus <- corpus(raw_corpus)
   })
 
-#---------------------------- Summary ---------------------------------------------------------
+#---------------------------- Oversigt ---------------------------------------------------------
   
   #Får output til at matche input når der skiftes mellem teksterne
   output$text_token_sum_doc <- DT::renderDT({
@@ -617,9 +617,9 @@ output$viz_wordcloud <- renderPlot({
     #Definerer at keyworded kommer fra inputtet herfor
     select_kwic <- input$select_kwic
     #KWIC visualisering
-    kwic(selected_text_data_context, pattern = phrase(select_kwic), window = window_context)
+    KWIC <- kwic(selected_text_data_context, pattern = phrase(select_kwic), window = window_context)
     
-  })
+  }, options = list(language = list(zeroRecords = "Søg efter ord eller frase for at se resultaterne")))
   
   
 #--------------------------- Begrebsafklaring ------------------------------------------------
