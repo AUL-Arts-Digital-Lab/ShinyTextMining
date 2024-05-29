@@ -5,14 +5,11 @@
 library(shiny) #https://cran.r-project.org/web/packages/shiny/index.html
 library(thematic) #https://cran.rstudio.com/web/packages/thematic/index.html
 library(readtext) #https://cran.r-project.org/web/packages/readtext/index.html
-library(dplyr) #https://cran.r-project.org/web/packages/dplyr/index.html 
 library(tidyverse) #https://cran.r-project.org/web/packages/tidyverse/index.html
 library(tidytext) #https://cran.r-project.org/web/packages/tidytext/index.html
 library(quanteda) #https://cran.r-project.org/web/packages/quanteda/index.html
 library(quanteda.textstats) #https://cran.r-project.org/web/packages/quanteda.textstats/index.html
-library(ggplot2) #https://cran.r-project.org/web/packages/ggplot2/index.html
 library(ggraph) #https://cran.r-project.org/web/packages/ggraph/index.html
-library(igraph) #https://cran.r-project.org/web/packages/igraph/index.html 
 library(ggwordcloud) #https://cran.r-project.org/web/packages/ggwordcloud/index.html
 
 #------------------------------------- Stop words -------------------------------------------
@@ -404,9 +401,11 @@ server <- function(input, output) {
     text_info_df <-  subset(text_info_df, select = -document)
     
     #Ændrer navnet på kolonnerne
-    names(text_info_df)[1] <- "Tekst"
     names(text_info_df)[2] <- "Antal ord"
     names(text_info_df)[3] <- "LIX"
+    
+    #Fjern ekstra kolonne med samme værdi som tekst kolonnen
+    text_info_df <- subset(text_info_df, select = c("Antal ord", "LIX"))
     text_info_df
   })
   
