@@ -347,7 +347,7 @@ ui <- fluidPage(
                               br(),
                        #Definerer funktionen, der gør det muligt at fremsøge et keyword
                        textInput(inputId = "select_kwic",
-                                 label = "Søg efter ord eller frase",
+                                 label = "Søg her efter ord eller frase",
                                  value = "")),
                        column(3,
                               br(),
@@ -562,6 +562,7 @@ server <- function(input, output, session) {
         geom_col() +
         facet_wrap( ~ title, ncol = 5, scales = "free") +
         coord_flip() +
+        scale_fill_gradient(low = "#CAF0FE", high = "#002E70") +
         scale_x_reordered() +
         theme(axis.text.y = element_text(size = 12)) +
         geom_label(aes(x = word, y = n, label = n), 
@@ -586,6 +587,7 @@ server <- function(input, output, session) {
       geom_col() +
       facet_wrap( ~ title, ncol = 6, scales = "free") +
       coord_flip() +
+      scale_fill_gradient(low = "#CAF0FE", high = "#002E70") +
       theme(axis.text.y = element_text(size = 12)) +
       scale_x_reordered() +
       geom_label(aes(x = word, y = n, label = n), 
@@ -606,6 +608,7 @@ server <- function(input, output, session) {
         ggplot(., aes(x = word, y = n, fill = n)) +
         geom_col() +
         coord_flip() +
+        scale_fill_gradient(low = "#CAF0FE", high = "#002E70") +
         theme(axis.text.y = element_text(size = 12)) +
         geom_label(aes(x = word, y = n, label = n), 
                    vjust = "top", hjust = "center",
@@ -625,6 +628,7 @@ server <- function(input, output, session) {
         ggplot(., aes(x = word, y = n, fill = n)) +
         geom_col() +
         coord_flip() +
+        scale_fill_gradient(low = "#CAF0FE", high = "#002E70") +
         theme(axis.text.y = element_text(size = 12)) +
         geom_label(aes(x = word, y = n, label = n), 
                    vjust = "top", hjust = "center",
@@ -648,6 +652,7 @@ server <- function(input, output, session) {
         geom_col() +
         facet_wrap( ~ title, ncol = 5, scales = "free") +
         coord_flip() +
+        scale_fill_gradient(low = "#CAF0FE", high = "#002E70") +
         theme(axis.text.y = element_text(size = 12)) +
         scale_x_reordered() +
         geom_label(aes(x = word, y = n, label = n), 
@@ -672,6 +677,7 @@ server <- function(input, output, session) {
         geom_col() +
         facet_wrap( ~ title, ncol = 6, scales = "free") +
         coord_flip() +
+        scale_fill_gradient(low = "#CAF0FE", high = "#002E70") +
         theme(axis.text.y = element_text(size = 12)) +
         scale_x_reordered() +
         geom_label(aes(x = word, y = n, label = n), 
@@ -692,6 +698,7 @@ server <- function(input, output, session) {
           ggplot(., aes(x = word, y = n, fill = n)) +
           geom_col() +
           coord_flip() +
+          scale_fill_gradient(low = "#CAF0FE", high = "#002E70") +
           theme(axis.text.y = element_text(size = 12)) +
           geom_label(aes(x = word, y = n, label = n), 
                      vjust = "top", hjust = "center",
@@ -711,6 +718,7 @@ server <- function(input, output, session) {
         ggplot(., aes(x = word, y = n, fill = n)) +
         geom_col() +
         coord_flip() +
+        scale_fill_gradient(low = "#CAF0FE", high = "#002E70") +
         theme(axis.text.y = element_text(size = 12)) +
         geom_label(aes(x = word, y = n, label = n), 
                    vjust = "top", hjust = "center",
@@ -734,6 +742,7 @@ server <- function(input, output, session) {
         geom_col() +
         facet_wrap( ~ month, ncol = 6, scales = "free") +
         coord_flip() +
+        scale_fill_gradient(low = "#CAF0FE", high = "#002E70") +
         theme(axis.text.y = element_text(size = 12)) +
         scale_x_reordered() +
         geom_label(aes(x = word, y = n, label = n), 
@@ -754,6 +763,7 @@ server <- function(input, output, session) {
         ggplot(., aes(x = word, y = n, fill = n)) +
         geom_col() +
         coord_flip() +
+        scale_fill_gradient(low = "#CAF0FE", high = "#002E70") +
         theme(axis.text.y = element_text(size = 12)) +
         geom_label(aes(x = word, y = n, label = n), 
                    vjust = "top", hjust = "center",
@@ -777,6 +787,7 @@ server <- function(input, output, session) {
         geom_col() +
         facet_wrap( ~ title, ncol = 3, scales = "free") +
         coord_flip() +
+        scale_fill_gradient(low = "#CAF0FE", high = "#002E70") +
         theme(axis.text.y = element_text(size = 12)) +
         scale_x_reordered() +
         geom_label(aes(x = word, y = n, label = n), 
@@ -797,6 +808,7 @@ server <- function(input, output, session) {
         ggplot(., aes(x = word, y = n, fill = n)) +
         geom_col() +
         coord_flip() +
+        scale_fill_gradient(low = "#CAF0FE", high = "#002E70") +
         theme(axis.text.y = element_text(size = 12)) +
         geom_label(aes(x = word, y = n, label = n), 
                    vjust = "top", hjust = "center",
@@ -844,7 +856,7 @@ server <- function(input, output, session) {
         facet_wrap(~title) +
         theme_minimal() +
         scale_size_area(max_size = 12) +
-        scale_color_gradient()
+        scale_color_gradient(low = "#CAF0FE", high = "#002E70")
       
       #Brødrende Grimm (dansk) - vis vis enkelte tekster
     } else if (input$text_data_cloud == "Brødrene Grimms eventyr (dansk)" & input$selected_corpora_or_text_cloud == "Tekster"){
@@ -856,7 +868,7 @@ server <- function(input, output, session) {
         geom_text_wordcloud() +
         theme_minimal() +
         scale_size_area(max_size = 12) +
-        scale_color_gradient()
+        scale_color_gradient(low = "#CAF0FE", high = "#002E70")
       
       #Brødrende Grimm (engelsk) - vis hele korpora
     } else if (input$text_data_cloud == "Brødrene Grimms eventyr (engelsk)" & input$selected_corpora_or_text_cloud == "Hele corpus"){
@@ -868,7 +880,7 @@ server <- function(input, output, session) {
         geom_text_wordcloud() +
         theme_minimal() +
         scale_size_area(max_size = 12) +
-        scale_color_gradient()
+        scale_color_gradient(low = "#CAF0FE", high = "#002E70")
       
       #Brødrende Grimm (dansk) - vis hele korpora
     } else if (input$text_data_cloud == "Brødrene Grimms eventyr (dansk)" & input$selected_corpora_or_text_cloud == "Hele corpus"){
@@ -880,7 +892,7 @@ server <- function(input, output, session) {
         geom_text_wordcloud() +
         theme_minimal() +
         scale_size_area(max_size = 12) +
-        scale_color_gradient()
+        scale_color_gradient(low = "#CAF0FE", high = "#002E70")
     
     #H.C Andersen (engelsk) - vis enkelte tekster
   } else if (input$text_data_cloud == "H.C Andersens eventyr (engelsk)" & input$selected_corpora_or_text_cloud == "Tekster"){
@@ -895,7 +907,7 @@ server <- function(input, output, session) {
       facet_wrap(~title) +
       theme_minimal() +
       scale_size_area(max_size = 12) +
-      scale_color_gradient()
+      scale_color_gradient(low = "#CAF0FE", high = "#002E70")
     
     #H.C Andersen (dansk) - vis enkelte tekster
   } else if (input$text_data_cloud == "H.C Andersens eventyr (dansk)" & input$selected_corpora_or_text_cloud == "Tekster"){
@@ -910,7 +922,7 @@ server <- function(input, output, session) {
       facet_wrap(~title) +
       theme_minimal() +
       scale_size_area(max_size = 12) +
-      scale_color_gradient()
+      scale_color_gradient(low = "#CAF0FE", high = "#002E70")
     
     #H.C Andersen (engelsk) - vis hele korpora
   } else if (input$text_data_cloud == "H.C Andersens eventyr (engelsk)" & input$selected_corpora_or_text_cloud == "Hele corpus"){
@@ -922,7 +934,7 @@ server <- function(input, output, session) {
       geom_text_wordcloud() +
       theme_minimal() +
       scale_size_area(max_size = 12) +
-      scale_color_gradient()
+      scale_color_gradient(low = "#CAF0FE", high = "#002E70")
     
     #H.C Andersen (dansk) - vis hele korpora
   } else if (input$text_data_cloud == "H.C Andersens eventyr (dansk)" & input$selected_corpora_or_text_cloud == "Hele corpus"){
@@ -934,7 +946,7 @@ server <- function(input, output, session) {
       geom_text_wordcloud() +
       theme_minimal() +
       scale_size_area(max_size = 12) +
-      scale_color_gradient()
+      scale_color_gradient(low = "#CAF0FE", high = "#002E70")
     
     #St. Croix - vis enkelte tekster
   } else if (input$text_data_cloud == "St. Croix Avis 1878" & input$selected_corpora_or_text_cloud == "Tekster"){
@@ -949,7 +961,7 @@ server <- function(input, output, session) {
       facet_wrap(~month) +
       theme_minimal() +
       scale_size_area(max_size = 12) +
-      scale_color_gradient()
+      scale_color_gradient(low = "#CAF0FE", high = "#002E70")
     
     #St. Croix - vis hele korpora
   } else if (input$text_data_cloud == "St. Croix Avis 1878" & input$selected_corpora_or_text_cloud == "Hele corpus"){
@@ -961,7 +973,7 @@ server <- function(input, output, session) {
       geom_text_wordcloud() +
       theme_minimal() +
       scale_size_area(max_size = 12) +
-      scale_color_gradient()
+      scale_color_gradient(low = "#CAF0FE", high = "#002E70")
     
     #Jane Austen - vis enkelte tekster
   } else if (input$text_data_cloud == "Jane Austens Romaner" & input$selected_corpora_or_text_cloud == "Tekster"){
@@ -976,7 +988,7 @@ server <- function(input, output, session) {
       facet_wrap(~title) +
       theme_minimal() +
       scale_size_area(max_size = 12) +
-      scale_color_gradient()
+      scale_color_gradient(low = "#CAF0FE", high = "#002E70")
     
     #Jane Austen - vis hele korpora
   } else if (input$text_data_cloud == "Jane Austens Romaner" & input$selected_corpora_or_text_cloud == "Hele corpus"){
@@ -988,7 +1000,7 @@ server <- function(input, output, session) {
       geom_text_wordcloud() +
       theme_minimal() +
       scale_size_area(max_size = 12) +
-      scale_color_gradient()
+      scale_color_gradient(low = "#CAF0FE", high = "#002E70")
   }
   })
   #------------------------ Kontekst --------------------------------------------------
@@ -1019,7 +1031,7 @@ server <- function(input, output, session) {
     #KWIC visualisering
     kwic(selected_text_data_context, pattern = phrase(select_kwic), window = window_context)
     
-  }, options = list(language = list(zeroRecords = "Søg efter ord eller frase for at se resultaterne")))
+  }, options = list(language = list(zeroRecords = "Søg efter ord eller frase for at se resultaterne", search = "Filtrer i tabellen")))
   
   #------------------------- Bigrams --------------------------------------------------------
   #Visualisering ag Bigrams som netværksgraf
