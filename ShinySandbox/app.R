@@ -329,7 +329,6 @@ ui <- fluidPage(
                        br(),
                        h4("Info"),
                        helpText("Visualiseringen viser konteksten, hvori et fremsøgt ord eller frase optræder"),
-                       helpText("Søg her for at se konteksten"),
                        br(),
                        column(3,
                               br(),
@@ -488,7 +487,7 @@ server <- function(input, output, session) {
     #Fjern ekstra kolonne med samme værdi som tekst kolonnen
     text_info_df <- subset(text_info_df, select = c("Antal ord", "LIX"))
     text_info_df
-  })
+  }, options = list(language = list(search = "Filtrer i tabellen")))
   
 #---------------------------- Nærlæs_tekst ----------------------------------------------------
   

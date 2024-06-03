@@ -40,6 +40,7 @@ ui <- fluidPage(
                  fileInput("files",
                            label="Upload filer",
                            multiple = TRUE),
+                 textOutput("file_size_info"),
                  br(),
                  #Vælg encoding
                  radioButtons(inputId = "corpus_encoding",
@@ -152,7 +153,6 @@ ui <- fluidPage(
                            br(),
                            h4("Info"),
                            helpText("Visualiseringen viser konteksten, hvori et fremsøgt ord eller frase optræder"),
-                           helpText("Søg for at se konteksten"),
                            br(),
                            column(3,
                                   br(),
@@ -218,6 +218,8 @@ ui <- fluidPage(
 #------------------------- Definer server logic -------------------------------------------
 
 server <- function(input, output) {
+  #Gør det muligt at uploade filer på 30MB frem for default værdien på 5MB
+  options(shiny.maxRequestSize=30*1024^2)
   
 #------------------------ Fjern ord fra korpora --------------------------------------------
  #Lav dataframe reaktiv
@@ -231,6 +233,10 @@ server <- function(input, output) {
   observeEvent(input$remove_word, {
     temp_df <- rbind(remove_word_df(), removed_word())
     remove_word_df(temp_df)
+  })
+  #Info om ventetid ved store filer
+  output$file_size_info <- renderText({
+    paste("Store filer tager længere tid at uploade end små. Hav tålmodighed, hvis visualiseringerne ikke viser sig med det samme.")
   })
   #Info tekst om begrebsafklaring
   output$help_info <- renderText({
@@ -426,7 +432,7 @@ server <- function(input, output) {
     #Fjern ekstra kolonne med samme værdi som tekst kolonnen
     text_info_df <- subset(text_info_df, select = c("Antal ord", "LIX"))
     text_info_df
-  })
+  }, options = list(language = list(search = "Filtrer i tabellen")))
   
   
 #---------------------------- Nærlæs_tekst ----------------------------------------------------
@@ -660,7 +666,7 @@ output$viz_wordcloud <- renderPlot({
   
 #--------------------------- Begrebsafklaring ------------------------------------------------
   output$term_info_text_1 <- renderText({
-    paste("Her kan du uploade en eller flere filer, der fungere som corpus i visualiseringerne. Filerne skal være i txt eller pdf format.")
+    paste("Her kan du uploade en eller flere filer, der fungere som corpus i visualiseringerne. For at få det bedste resultat, skal filerne skal være i txt eller pdf format. Maximum filstørrelse er 30MB pr. fil.")
   })
   
   output$term_info_text_2 <- renderText({
