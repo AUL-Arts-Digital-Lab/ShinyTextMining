@@ -10,7 +10,9 @@ library(tidytext) #https://cran.r-project.org/web/packages/tidytext/index.html
 library(quanteda) #https://cran.r-project.org/web/packages/quanteda/index.html
 library(quanteda.textstats) #https://cran.r-project.org/web/packages/quanteda.textstats/index.html
 library(ggraph) #https://cran.r-project.org/web/packages/ggraph/index.html
+library(igraph) #https://cran.r-project.org/web/packages/igraph/index.html
 library(ggwordcloud) #https://cran.r-project.org/web/packages/ggwordcloud/index.html
+library(RColorBrewer) #https://cran.r-project.org/web/packages/RColorBrewer/index.html
 
 #------------------------------------- Stop words -------------------------------------------
 
@@ -64,7 +66,9 @@ ui <- fluidPage(
                                 multiple = TRUE,
                                 options = list(placeholder = "", create = TRUE)),
                  #Liste til selvvalgte stopord
-                 verbatimTextOutput("list_removed_word")),
+                 verbatimTextOutput("list_removed_word"),
+                 br(),
+                 textOutput("help_info")),
     mainPanel(
       #Danner et menu-layout, hvor det er muligt at skifte mellem visualiseringerne
       tabsetPanel(type = "tabs",
@@ -132,6 +136,13 @@ ui <- fluidPage(
                            helpText("Visualiseringen viser de ordpar, der forekommer i corpus. Juster minimusforekomsten af ordpar - ordparet fremgår i corpus mindst x antal gange"),
                            column(3,
                                   br(),
+                                  radioButtons(inputId = "selected_corpora_or_text_bigrams",
+                                               label = "Vis for hele corpus eller se fordelingen på tekster",
+                                               choices = c("Hele corpus",
+                                                           "Tekster"),
+                                               selected = "Hele corpus")),
+                           column(3,
+                                  br(),
                                   #Definerer funktionen, hvor det er muligt at vælge minimum frekvens for ordene i visualiseringen
                                   sliderInput(inputId = "wordpair_freq_bigrams", 
                                               label = "Vælg minimums frekvens for ordpar i visualiseringen mellem 1 og 50",
@@ -147,7 +158,7 @@ ui <- fluidPage(
                                   br(),
                                   #Definerer funktionen, der gør det muligt at fremsøge et keyword
                                   textInput(inputId = "select_kwic",
-                                            label = "Søg efter ord eller frase",
+                                            label = "Søg her efter ord eller frase",
                                             value = "")),
                            column(3,
                                   br(),
@@ -193,7 +204,11 @@ ui <- fluidPage(
                            br(),
                            h4("Kontekst:"),
                            textOutput("term_info_text_9"),
+                           br(),
+                           h4("Hvis du vil vide mere:"),
+                           textOutput("reference_info_text"),
                            br())
+                  
 
       )
     )
@@ -216,6 +231,10 @@ server <- function(input, output) {
   observeEvent(input$remove_word, {
     temp_df <- rbind(remove_word_df(), removed_word())
     remove_word_df(temp_df)
+  })
+  #Info tekst om begrebsafklaring
+  output$help_info <- renderText({
+    paste("Er du i tvivl om et begreb, en formulering, en udregning eller andet? Find svar under fanen Begrebsafklaring.")
   })
   
 #-------------------------- Indlæs og klargøring filer --------------------------------------------------------  
@@ -444,7 +463,7 @@ server <- function(input, output) {
   output$viz_plot <- renderPlot({
     if (input$language_stopwords == "en"){
       selected_text_data_plot <- tidy_corpus()
-      
+
       }else if(input$language_stopwords == "da"){
         selected_text_data_plot <- tidy_corpus_da()
       }
@@ -471,7 +490,8 @@ server <- function(input, output) {
                word = reorder_within(word, n, title)) %>% 
         ggplot(aes(x = word, y = n, fill = n)) +
         geom_col() +
-        facet_wrap( ~ title, ncol = 3, scales = "free") +
+        scale_fill_gradient(low = "#CAF0FE", high = "#002E70")+
+        facet_wrap( ~ title, ncol = 4, scales = "free") +
         coord_flip() +
         scale_x_reordered() +
         geom_label(aes(x = word, y = n, label = n), 
@@ -483,6 +503,7 @@ server <- function(input, output) {
              y = "Hyppighed", 
              fill = "Hyppighed")
       
+      
     #vis hele corpus 
    } else if (input$selected_corpora_or_text == "Hele corpus"){
       selected_text_data_plot %>%
@@ -492,7 +513,8 @@ server <- function(input, output) {
         ggplot(., aes(x = word, y = n, fill = n)) +
         geom_col() +
         coord_flip() +
-        geom_label(aes(x = word, y = n, label = n), 
+        scale_fill_gradient(low = "#CAF0FE", high = "#002E70") +
+        geom_label(aes(x = word, y = n, label = n),    
                    vjust = "top", hjust = "center",
                    fill = "white", color = "black", 
                    size = 3) +
@@ -580,11 +602,13 @@ output$viz_wordcloud <- renderPlot({
     #Definer udseende på pilen, der markerer relationen mellem bigrams
     a <- grid::arrow(type = "closed", length = unit(.15, "inches"))
     
+    #vis enkelte tekster
+    if (input$selected_corpora_or_text_bigrams == "Tekster"){
     viz_bigrams_graph <- selected_text_data_bigrams %>%
+      group_by(title) %>%
       count(word1, word2, sort = TRUE) %>%
       filter(n >= wordpair_freq_bigrams) %>% 
       graph_from_data_frame()
-    
     ggraph(viz_bigrams_graph, layout = "fr") +
       geom_edge_link(aes(edge_alpha = n),
                      show.legend = FALSE,
@@ -593,7 +617,20 @@ output$viz_wordcloud <- renderPlot({
       geom_node_point(size = 2) +
       geom_node_text(aes(label = name), vjust = 1, hjust = 1) +
       theme_void()
-    
+    } else if (input$selected_corpora_or_text_bigrams == "Hele corpus"){
+      viz_bigrams_graph <- selected_text_data_bigrams %>%
+        count(word1, word2, sort = TRUE) %>%
+        filter(n >= wordpair_freq_bigrams) %>% 
+        graph_from_data_frame()
+      ggraph(viz_bigrams_graph, layout = "fr") +
+        geom_edge_link(aes(edge_alpha = n),
+                       show.legend = FALSE,
+                       arrow = a,
+                       end_cap = circle(.05, 'inches')) +
+        geom_node_point(size = 2) +
+        geom_node_text(aes(label = name), vjust = 1, hjust = 1) +
+        theme_void()
+    }
   })
   #------------------------ Kontekst --------------------------------------------------
   
@@ -631,7 +668,7 @@ output$viz_wordcloud <- renderPlot({
   })
   
   output$term_info_text_3 <- renderText({
-    paste("Stopordslisterne indeholder henholdsvis engelske og danske stopord. Den integrerede stopordsliste til engelske tekster stammer fra R pakken tidytext og indeholder ord fra de tre leksika: onix, SMART og snowball. Stopordslisten til de danske tekster er udarbejdet af informationsspecialister ved Det Kgl. Bibliotek. Begge stopordslister kan findes i mappen Stopwords. ")
+    paste("Stopordslisterne indeholder henholdsvis engelske og danske stopord. Den integrerede stopordsliste til engelske tekster stammer fra R pakken tidytext og indeholder ord fra de tre leksika: onix, SMART og snowball. Stopordslisten til de danske tekster er udarbejdet af informationsspecialister ved Det Kgl. Bibliotek. Begge stopordslister kan findes i mappen Stopwords.")
   })
   
   output$term_info_text_4 <- renderText({
@@ -665,6 +702,10 @@ output$viz_wordcloud <- renderPlot({
   output$term_info_text_11 <- renderText({
     paste("Gør det muligt at vælge mellem forskellige tekst afkodninger. Dette er særligt relevant i forbindelse med tekster indeholdende danske specialtegn: æ, ø og å. Her kan latin1 være en fordel. UTF-8 er den universelle standard for afkoding af tekst, og denne er ofte bedst til engelsksprogede tekster.")
   })
+  
+  output$reference_info_text <- renderText({
+    paste("Text mining applikationen tager udgangspunkt i tidyverse og quanteda principper for databehandling og visualisering. Der tages udgangspunkt i tidyverse og tidytext i fanerne Nærlæs tekst, Søjlediagram, Wordcloud og Bigram. Du kan læse mere om dette i følgende: https://www.tidytextmining.com/. Fanerne indeholdende Oversigt og Kontekst er baseret på grundprincipper inden for quanteda. Læs mere om dette via følgende:http://quanteda.io/.")
+  })  
 }
 
 #--------------------------- Kør appen ------------------------------------------------------

@@ -10,6 +10,7 @@ library(tidytext) #https://cran.r-project.org/web/packages/tidytext/index.html
 library(quanteda) #https://cran.r-project.org/web/packages/quanteda/index.html
 library(quanteda.textstats) #https://cran.r-project.org/web/packages/quanteda.textstats/index.html
 library(ggraph) #https://cran.r-project.org/web/packages/ggraph/index.html
+library(igraph) #https://cran.r-project.org/web/packages/igraph/index.html
 library(ggwordcloud) #https://cran.r-project.org/web/packages/ggwordcloud/index.html
 
 
@@ -209,7 +210,9 @@ ui <- fluidPage(
                      multiple = TRUE,
                      options = list(placeholder = "", create = TRUE)),
       #Liste til selvvalgte stopord
-      verbatimTextOutput("list_removed_word")),
+      verbatimTextOutput("list_removed_word"),
+      br(),
+      textOutput("help_info")),
   
   mainPanel(
     
@@ -326,7 +329,7 @@ ui <- fluidPage(
                        br(),
                        h4("Info"),
                        helpText("Visualiseringen viser konteksten, hvori et fremsøgt ord eller frase optræder"),
-                       helpText("Søg for at se konteksten"),
+                       helpText("Søg her for at se konteksten"),
                        br(),
                        column(3,
                               br(),
@@ -403,6 +406,9 @@ ui <- fluidPage(
                        br(),
                        h4("Kontekst:"),
                        textOutput("term_info_text_9"),
+                       br(),
+                       h4("Hvis du vil vide mere:"),
+                       textOutput("reference_info_text"),
                        br())
   )
 )
@@ -423,6 +429,10 @@ server <- function(input, output, session) {
   observeEvent(input$remove_word, {
     temp_df <- rbind(remove_word_df(), removed_word())
     remove_word_df(temp_df)
+  })
+  #Info tekst om begrebsafklaring
+  output$help_info <- renderText({
+    paste("Er du i tvivl om et begreb, en formulering, en udregning eller andet? Find svar under fanen Begrebsafklaring.")
   })
 
 #---------------------------- Oversigt ---------------------------------------------------------
@@ -1089,6 +1099,10 @@ server <- function(input, output, session) {
   
   output$term_info_text_10 <- renderText({
     paste("Viser en oversigt over det pågældende corpus. Antallet af dokumenter, der optæder i corpus. Antal ord i corpus samt antal ord i de enkelte tekster. Antal unikke ord er en udregning af, hvor mange forskellige ord, der optræder i corpus. På den måde tæller hvert enkelt ord kun for en og er ikke påvirket af, om det optræder i corpus en eller flere gange. Lixtal er en beregning af en teksts sværhedsgrad i forhold til læsbarhed. Definitionen på LIX er fra Björnsson (1968). Udregningen af LIX er lavet ved følgende formel: ASL + ((100 * Nwsy >= 7)/Nw). Her er ASL = Average sentence length (dvs. det samlede antal ord divideret med antallet af sætninger), Nw = number of words og Nwsy = number of word syllables. Denne er er målrettet >= 7 (dvs. ord på mere end seks bogstaver). I udregningen anvendes yderligere et parameter: min_sentence_length = 2. Dette parameter har til formål at definere minimumslængden for en sætning på baggrund af antallet af ord. Her er en sætning defineret som det, der står foran et punktum. Ved at sætte grænsen ved to frem for en, undgår vi at tælle 'falske' sætninger med. Dvs. at sætninger der eksempelvis starter med '1.000' eller 'H.C. Andersen' ikke bliver anset som sætninger.")
+  })
+  
+  output$reference_info_text <- renderText({
+    paste("Text mining applikationen tager udgangspunkt i tidyverse og quanteda principper for databehandling og visualisering. Der tages udgangspunkt i tidyverse og tidytext i fanerne Nærlæs tekst, Søjlediagram, Wordcloud og Bigram. Du kan læse mere om dette i følgende: https://www.tidytextmining.com/. Fanerne indeholdende Oversigt og Kontekst er baseret på grundprincipper inden for quanteda. Læs mere om dette via følgende:http://quanteda.io/.")
   })
   
 }
