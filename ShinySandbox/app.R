@@ -193,10 +193,7 @@ ui <- fluidPage(
   tags$head(
     tags$link(rel = "stylesheet", type = "text/css", href = "shinyLayout.css")
   ),
-  titlePanel(title = span(tags$img(src = "logo-digital.svg"),
-                          br(),
-                          br(),
-                          "Text Mining")),
+  titlePanel(title = "Text Mining"),
   thematic::thematic_shiny(),
   
   
@@ -212,7 +209,10 @@ ui <- fluidPage(
       #Liste til selvvalgte stopord
       verbatimTextOutput("list_removed_word"),
       br(),
-      textOutput("help_info")),
+      textOutput("help_info"),
+      br(),
+      br(),
+      span(tags$img(src = "logo-digital-white.svg"))),
   
   mainPanel(
     
