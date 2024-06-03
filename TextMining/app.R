@@ -558,7 +558,7 @@ output$viz_wordcloud <- renderPlot({
       facet_wrap(~title) +
       theme_minimal() +
       scale_size_area(max_size = 12) +
-      scale_color_gradient()
+      scale_color_gradient(low = "#CAF0FE", high = "#002E70")
     #vis hele corpus
   } else if (input$selected_corpora_or_text_cloud == "Hele corpus"){
     selected_text_data_cloud %>%
@@ -569,7 +569,7 @@ output$viz_wordcloud <- renderPlot({
       geom_text_wordcloud() +
       theme_minimal() +
       scale_size_area(max_size = 12) +
-      scale_color_gradient()
+      scale_color_gradient(low = "#CAF0FE", high = "#002E70")
   }
   
  })
@@ -655,7 +655,7 @@ output$viz_wordcloud <- renderPlot({
     #KWIC visualisering
     KWIC <- kwic(selected_text_data_context, pattern = phrase(select_kwic), window = window_context)
     
-  }, options = list(language = list(zeroRecords = "Søg efter ord eller frase for at se resultaterne")))
+  }, options = list(language = list(zeroRecords = "Søg efter ord eller frase for at se resultaterne", search = "Filtrer i tabellen")))
   
   
 #--------------------------- Begrebsafklaring ------------------------------------------------
