@@ -325,6 +325,29 @@ ui <- fluidPage(
                                    label = "Vælg antal ord i visualiseringen mellem 5 og 30",
                                    min =5, max = 30, value = 20, step = 5)),
                        plotOutput("viz_wordcloud")),
+              tabPanel("Bigrams",
+                       br(),
+                       h4("Info"),
+                       helpText("Visualiseringen viser de ordpar, der forekommer i corpus. Juster minimusforekomsten af ordpar - ordparet fremgår i corpus mindst x antal gange"),
+                       column(3,
+                              br(),
+                              #Definerer funktionen, hvor det er muligt at vælge mellem de forskellige tekster
+                              selectInput(inputId = "text_data_bigrams", 
+                                          label = "Vælg text",
+                                          choices = c("Brødrene Grimms eventyr (engelsk)",
+                                                      "Brødrene Grimms eventyr (dansk)",
+                                                      "H.C Andersens eventyr (engelsk)",
+                                                      "H.C Andersens eventyr (dansk)",
+                                                      "St. Croix Avis 1878",
+                                                      "Jane Austens Romaner"), 
+                                          selected = "Jane Austens Romaner")),
+                       column(3,
+                              br(),
+                              #Definerer funktionen, hvor det er muligt at vælge minimum frekvens for ordene i visualiseringen
+                              sliderInput(inputId = "wordpair_freq_bigrams", 
+                                          label = "Vælg minimums frekvens for ordpar i visualiseringen mellem 1 og 50",
+                                          min = 1, max = 50, value = 10, step = 2)),
+                       plotOutput("viz_bigrams")),
               tabPanel("Kontekst",
                        br(),
                        h4("Info"),
@@ -353,30 +376,9 @@ ui <- fluidPage(
                        sliderInput(inputId = "window_context", 
                                    label = "Vælg størrelse på ordets kontekst",
                                    min =1, max = 50, value = 1, step = 1)),
-                       DT::DTOutput("viz_context")),
-              tabPanel("Bigrams",
-                       br(),
-                       h4("Info"),
-                       helpText("Visualiseringen viser de ordpar, der forekommer i corpus. Juster minimusforekomsten af ordpar - ordparet fremgår i corpus mindst x antal gange"),
-                       column(3,
-                              br(),
-                       #Definerer funktionen, hvor det er muligt at vælge mellem de forskellige tekster
-                       selectInput(inputId = "text_data_bigrams", 
-                                   label = "Vælg text",
-                                   choices = c("Brødrene Grimms eventyr (engelsk)",
-                                               "Brødrene Grimms eventyr (dansk)",
-                                               "H.C Andersens eventyr (engelsk)",
-                                               "H.C Andersens eventyr (dansk)",
-                                               "St. Croix Avis 1878",
-                                               "Jane Austens Romaner"), 
-                                   selected = "Jane Austens Romaner")),
-                       column(3,
-                              br(),
-                       #Definerer funktionen, hvor det er muligt at vælge minimum frekvens for ordene i visualiseringen
-                       sliderInput(inputId = "wordpair_freq_bigrams", 
-                                   label = "Vælg minimums frekvens for ordpar i visualiseringen mellem 1 og 50",
-                                   min = 1, max = 50, value = 10, step = 2)),
-                       plotOutput("viz_bigrams")),
+                       DT::DTOutput("viz_context"),
+                       downloadButton(outputId ="download_KWIC", 
+                                      label = "Download tabel")),
               tabPanel("Begrebsafklaring",
                        br(),
                        h4("Info"),
@@ -1028,9 +1030,15 @@ server <- function(input, output, session) {
     #Definerer at keyworded kommer fra inputtet herfor
     select_kwic <- input$select_kwic
     #KWIC visualisering
-    kwic(selected_text_data_context, pattern = phrase(select_kwic), window = window_context)
+    KWIC <<- kwic(selected_text_data_context, pattern = phrase(select_kwic), window = window_context)
     
   }, options = list(language = list(zeroRecords = "Søg efter ord eller frase for at se resultaterne", search = "Filtrer i tabellen")))
+  
+  #Download KWIC tabel til en xlsx (Excel) fil
+  output$download_KWIC <- downloadHandler(
+    filename = function() { "kontekst_tabel.xlsx"},
+    content = function(file) {write_xlsx(KWIC, path = file)
+    })
   
   #------------------------- Bigrams --------------------------------------------------------
   #Visualisering ag Bigrams som netværksgraf
