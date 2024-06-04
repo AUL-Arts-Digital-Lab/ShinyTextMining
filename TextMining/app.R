@@ -5,6 +5,7 @@
 library(shiny) #https://cran.r-project.org/web/packages/shiny/index.html
 library(thematic) #https://cran.rstudio.com/web/packages/thematic/index.html
 library(readtext) #https://cran.r-project.org/web/packages/readtext/index.html
+library(writexl) #https://cran.r-project.org/web/packages/writexl/index.html
 library(tidyverse) #https://cran.r-project.org/web/packages/tidyverse/index.html
 library(tidytext) #https://cran.r-project.org/web/packages/tidytext/index.html
 library(quanteda) #https://cran.r-project.org/web/packages/quanteda/index.html
@@ -158,13 +159,17 @@ ui <- fluidPage(
                                   br(),
                                   #Definerer funktionen, der gør det muligt at fremsøge et keyword
                                   textInput(inputId = "select_kwic",
-                                            label = "Søg her efter ord eller frase",
+                                            label = "Søg her efter et ord eller en frase",
                                             value = "")),
                            column(3,
                                   br(),
                                   sliderInput(inputId = "window_context", 
-                                              label = "Vælg antallet af ord før og efter søgeordet",
+                                              label = "Vælg størrelse på ordets kontekst",
                                               min = 1, max = 50, value = 1, step = 1)),
+                           column(3,
+                                  br(),
+                                  downloadButton(outputId ="download_KWIC", 
+                                                 label = "Download tabel")),
                                   br(),
                            DT::DTOutput("viz_context")),
                   tabPanel("Begrebsafklaring",
@@ -658,11 +663,17 @@ output$viz_wordcloud <- renderPlot({
     
     #Definerer at keyworded kommer fra inputtet herfor
     select_kwic <- input$select_kwic
-    #KWIC visualisering
-    KWIC <- kwic(selected_text_data_context, pattern = phrase(select_kwic), window = window_context)
     
+    #KWIC visualisering
+    KWIC <<- kwic(selected_text_data_context, pattern = phrase(select_kwic), window = window_context)
+
   }, options = list(language = list(zeroRecords = "Søg efter ord eller frase for at se resultaterne", search = "Filtrer i tabellen")))
   
+  #Download KWIC tabel til en xlsx (Excel) fil
+  output$download_KWIC <- downloadHandler(
+    filename = function() { "kontekst_tabel.xlsx"},
+    content = function(file) {write_xlsx(KWIC, path = file)
+    })
   
 #--------------------------- Begrebsafklaring ------------------------------------------------
   output$term_info_text_1 <- renderText({
