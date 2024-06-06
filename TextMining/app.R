@@ -13,7 +13,7 @@ library(quanteda.textstats) #https://cran.r-project.org/web/packages/quanteda.te
 library(ggraph) #https://cran.r-project.org/web/packages/ggraph/index.html
 library(igraph) #https://cran.r-project.org/web/packages/igraph/index.html
 library(ggwordcloud) #https://cran.r-project.org/web/packages/ggwordcloud/index.html
-library(RColorBrewer) #https://cran.r-project.org/web/packages/RColorBrewer/index.html
+library(tidygraph)
 
 #------------------------------------- Stop words -------------------------------------------
 
@@ -615,14 +615,15 @@ output$viz_wordcloud <- renderPlot({
     viz_bigrams_graph <- selected_text_data_bigrams %>%
       group_by(title) %>%
       count(word1, word2, sort = TRUE) %>%
-      filter(n >= wordpair_freq_bigrams) %>% 
+      filter(n >= wordpair_freq_bigrams) %>%
       graph_from_data_frame()
+    
     ggraph(viz_bigrams_graph, layout = "fr") +
       geom_edge_link(aes(edge_alpha = n),
                      show.legend = FALSE,
                      arrow = a,
                      end_cap = circle(.05, 'inches')) +
-      geom_node_point(size = 2) +
+      geom_node_point(size = 2, colour = "#002E70") +
       geom_node_text(aes(label = name), vjust = 1, hjust = 1) +
       theme_void()
     } else if (input$selected_corpora_or_text_bigrams == "Hele corpus"){
@@ -630,12 +631,13 @@ output$viz_wordcloud <- renderPlot({
         count(word1, word2, sort = TRUE) %>%
         filter(n >= wordpair_freq_bigrams) %>% 
         graph_from_data_frame()
+      
       ggraph(viz_bigrams_graph, layout = "fr") +
         geom_edge_link(aes(edge_alpha = n),
                        show.legend = FALSE,
                        arrow = a,
                        end_cap = circle(.05, 'inches')) +
-        geom_node_point(size = 2) +
+        geom_node_point(size = 2, colour = "#002E70") +
         geom_node_text(aes(label = name), vjust = 1, hjust = 1) +
         theme_void()
     }
