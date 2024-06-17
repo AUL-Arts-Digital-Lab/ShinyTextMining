@@ -70,7 +70,7 @@ ui <- fluidPage(
                  textOutput("help_info"),
                  br(),
                  br(),
-                 span(tags$img(src = "logo-digital-white.svg"))),
+                 tags$img(src = "logo-digital-white.svg", height="75%", width ="75%")),
     mainPanel(
       #Danner et menu-layout, hvor det er muligt at skifte mellem visualiseringerne
       tabsetPanel(type = "tabs",
