@@ -11,17 +11,17 @@ I den anden version af værktøjet kan studerende mv. selv uploade en enkelt fil
 I denne mappe findes en række data, der relaterer sig til Text Mining. Hvert corpus stammer fra Project Gutenberg og er derfor uden for ophavsret. <br> Se mere om projektet her: https://www.gutenberg.org/ 
 
 ## Sådan tilgås materialet 
-### Installer R
+### 1. Installer R
 Download den nyeste version af R ned på din computer. Husk at vælg en version, der passer til din computers styresystem.
 <br> R kan downloades her: https://posit.co/download/rstudio-desktop/
 <br> R er et ’sprog’ vi skal bruge til at programmere med.
 
-### Installer RStudio
+### 2. Installer RStudio
 Download den nyeste version af RStudio ned på din computer. Husk at vælg en version, der passer til din computers styresystem.
 <br> RStudio kan downloades her: https://posit.co/download/rstudio-desktop/
 <br> RStudio er selve applikationen, hvori vi skriver vores kode. Det er RStudio vi åbner, når vi skal programmere.
 
-### Kør programmet
+### 3. Kør programmet
 1. Lav et nyt script under filer/files 
 2. Skriv følgende kode:  
 ``` 
