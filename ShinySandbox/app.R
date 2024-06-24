@@ -343,6 +343,13 @@ ui <- fluidPage(
                                           selected = "Jane Austens Romaner")),
                        column(3,
                               br(),
+                              radioButtons(inputId = "selected_corpora_or_text_bigrams",
+                                           label = "Vis for hele corpus eller se fordelingen på tekster",
+                                           choices = c("Hele corpus",
+                                                       "Tekster"),
+                                           selected = "Hele corpus")),
+                       column(3,
+                              br(),
                               #Definerer funktionen, hvor det er muligt at vælge minimum frekvens for ordene i visualiseringen
                               sliderInput(inputId = "wordpair_freq_bigrams", 
                                           label = "Vælg minimums frekvens for ordpar i visualiseringen mellem 1 og 50",
@@ -1069,20 +1076,58 @@ server <- function(input, output, session) {
     
     #Definer udseende på pilen, der markerer relationen mellem bigrams
     a <- grid::arrow(type = "closed", length = unit(.15, "inches"))
-    
-    viz_bigrams_graph <- selected_text_data_bigrams %>%
-      count(word1, word2, sort = TRUE) %>%
-      filter(n >= wordpair_freq_bigrams) %>% 
-      graph_from_data_frame()
-    
-      ggraph(viz_bigrams_graph, layout = "fr") +
-      geom_edge_link(aes(edge_alpha = n),
-                     show.legend = FALSE,
-                     arrow = a,
-                     end_cap = circle(.05, 'inches')) +
-      geom_node_point(size = 2) +
-      geom_node_text(aes(label = name), vjust = 1, hjust = 1) +
-      theme_void()
+      
+      #vis enkelte tekster
+      if (input$selected_corpora_or_text_bigrams == "Tekster" & input$text_data_bigrams != "St. Croix Avis 1878"){
+        viz_bigrams_graph <- selected_text_data_bigrams %>%
+          group_by(title) %>% 
+          count(word1, word2, sort = TRUE) %>%
+          filter(n >= wordpair_freq_bigrams) %>%
+          graph_from_data_frame() 
+        
+        ggraph(viz_bigrams_graph, layout = "fr") +
+          geom_edge_link(aes(edge_alpha = n),
+                         show.legend = FALSE,
+                         arrow = a,
+                         end_cap = circle(.05, 'inches'),
+                         color = "#002E70") +
+          geom_node_point(size = 2, colour = "#002E70") +
+          geom_node_text(aes(label = name), vjust = 1, hjust = 1) +
+          theme_void()
+        #vis enkelte tekster ved St.Croix
+      } else if (input$selected_corpora_or_text_bigrams == "Tekster" & input$text_data_bigrams == "St. Croix Avis 1878"){
+        viz_bigrams_graph <- selected_text_data_bigrams %>%
+          group_by(month) %>%
+          count(word1, word2, sort = TRUE) %>%
+          filter(n >= wordpair_freq_bigrams) %>% 
+          graph_from_data_frame()
+        
+        ggraph(viz_bigrams_graph, layout = "fr") +
+          geom_edge_link(aes(edge_alpha = n),
+                         show.legend = FALSE,
+                         arrow = a,
+                         end_cap = circle(.05, 'inches'),
+                         color = "#002E70") + 
+          geom_node_point(size = 2, colour = "#002E70") +
+          geom_node_text(aes(label = name), vjust = 1, hjust = 1) +
+          theme_void()
+       #vis for hele corpus
+      }else if (input$selected_corpora_or_text_bigrams == "Hele corpus"){
+        viz_bigrams_graph <- selected_text_data_bigrams %>%
+          count(word1, word2, sort = TRUE) %>%
+          filter(n >= wordpair_freq_bigrams) %>% 
+          graph_from_data_frame()
+        
+        ggraph(viz_bigrams_graph, layout = "fr") +
+          geom_edge_link(aes(edge_alpha = n),
+                         show.legend = FALSE,
+                         arrow = a,
+                         end_cap = circle(.05, 'inches'),
+                         color = "#002E70") +
+          geom_node_point(size = 2, colour = "#002E70") +
+          geom_node_text(aes(label = name), vjust = 1, hjust = 1) +
+          theme_void()
+      }
       
   })
   
