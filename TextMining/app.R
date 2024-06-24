@@ -323,7 +323,7 @@ server <- function(input, output) {
     }
     raw_corpus %>% 
       unnest_tokens(bigram, text, token = "ngrams", n = 2) %>%
-      filter(!is.na(bigram)) %>% 
+      filter(!is.na(bigram)) %>%
       separate(bigram, c("word1", "word2"), sep = " ") %>% 
       filter(!word1 %in% stop_words$word) %>% 
       filter(!word2 %in% stop_words$word)
@@ -613,19 +613,21 @@ output$viz_wordcloud <- renderPlot({
     #vis enkelte tekster
     if (input$selected_corpora_or_text_bigrams == "Tekster"){
     viz_bigrams_graph <- selected_text_data_bigrams %>%
-      group_by(title) %>%
+      group_by(title) %>% 
       count(word1, word2, sort = TRUE) %>%
       filter(n >= wordpair_freq_bigrams) %>%
-      graph_from_data_frame()
+      graph_from_data_frame() 
     
     ggraph(viz_bigrams_graph, layout = "fr") +
       geom_edge_link(aes(edge_alpha = n),
                      show.legend = FALSE,
                      arrow = a,
-                     end_cap = circle(.05, 'inches')) +
+                     end_cap = circle(.05, 'inches'),
+                     color = "#002E70") +
       geom_node_point(size = 2, colour = "#002E70") +
       geom_node_text(aes(label = name), vjust = 1, hjust = 1) +
       theme_void()
+    #vis for hele corpus
     } else if (input$selected_corpora_or_text_bigrams == "Hele corpus"){
       viz_bigrams_graph <- selected_text_data_bigrams %>%
         count(word1, word2, sort = TRUE) %>%
@@ -636,7 +638,8 @@ output$viz_wordcloud <- renderPlot({
         geom_edge_link(aes(edge_alpha = n),
                        show.legend = FALSE,
                        arrow = a,
-                       end_cap = circle(.05, 'inches')) +
+                       end_cap = circle(.05, 'inches'),
+                       color = "#002E70") +
         geom_node_point(size = 2, colour = "#002E70") +
         geom_node_text(aes(label = name), vjust = 1, hjust = 1) +
         theme_void()
