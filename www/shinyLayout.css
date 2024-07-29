@@ -1,0 +1,48 @@
+body {
+    color: #171717;
+  }
+  h1 {
+    color: #002E70;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+  h2{
+    font-family: Arial, Helvetica, sans-serif;
+    color: #002E70;
+  }
+  h3{
+    font-family: Arial, Helvetica, sans-serif;
+  }
+  h4{
+    font-family: Arial, Helvetica, sans-serif;
+    color: #002E70;
+  }
+  p1{
+    font-family: Arial, Helvetica, sans-serif;
+  }
+  .control-label{
+    font-family: Arial, Helvetica, sans-serif;
+  }
+  .nav.nav-tabs{
+    font-family: Arial, Helvetica, sans-serif;
+    color: #002E70;
+  }
+  .shiny-options-group{
+    font-family: Arial, Helvetica, sans-serif;
+  }
+  .help-block{
+    font-family: Arial, Helvetica, sans-serif;
+  }
+  .well{
+    background-color: #002E70;
+    color: #F2F4F8;
+  }
+  
+  .col-sm-12{
+    color:  #002E70;
+  }
+  .col-sm-3{
+    color:  #002E70;
+  }
+    
+
+ 
