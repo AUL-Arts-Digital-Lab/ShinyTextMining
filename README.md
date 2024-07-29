@@ -20,5 +20,5 @@ Download den nyeste version af RStudio ned på din computer. Husk at vælg en ve
 ``` 
 install.packages("shiny")
 library(shiny)
-runFromGitHub("ShinyTextMining", "AUL-Arts-Digital-Lab") 
+runGitHub("ShinyTextMining", "AUL-Arts-Digital-Lab") 
 ```
