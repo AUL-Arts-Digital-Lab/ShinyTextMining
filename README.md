@@ -6,7 +6,7 @@ I denne version af værktøjet kan studerende mv. lære at bruge nogle af de for
 ## Corpora
 I denne mappe findes en række data, der relaterer sig til Text Mining. Hvert corpus stammer fra Det Kgl. Bibliotek eller Project Gutenberg og er uden for ophavsret. Se mere om Project Gutenberg her: https://www.gutenberg.org/ 
 
-## Corpora
+## Stopwords
 I denne mappe findes henholdsvis en engelsk og en dansk stopordsliste. Det er her muligt at se, indholdet af de to stopordslister, der anvendes i text mining applikationen. 
 
 ## Sådan tilgås materialet 
