@@ -18,7 +18,19 @@ Download den nyeste version af RStudio ned på din computer. Husk at vælg en ve
 1. Lav et nyt script under filer/files 
 2. Skriv følgende kode:  
 ``` 
-install.packages("shiny")
 library(shiny)
+library(thematic)
+library(readtext)
+library(writexl)
+library(DT)
+library(tidyverse)
+library(tidytext)
+library(quanteda)
+library(quanteda.textstats)
+library(ggraph)
+library(igraph)
+library(ggwordcloud)
+library(tidygraph)
+
 runGitHub("ShinyTextMining", "AUL-Arts-Digital-Lab") 
 ```
