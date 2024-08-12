@@ -34,3 +34,4 @@ library(tidygraph)
 
 runGitHub("ShinyTextMining", "AUL-Arts-Digital-Lab") 
 ```
+3. Kør koden ved at trykke shift, ctrl og enter
