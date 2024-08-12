@@ -9,7 +9,38 @@ I denne mappe findes en række data, der relaterer sig til Text Mining. Hvert co
 ## Stopwords
 I denne mappe findes henholdsvis en engelsk og en dansk stopordsliste. Det er her muligt at se, indholdet af de to stopordslister, der anvendes i text mining applikationen. 
 
-## Sådan tilgås materialet 
+## Sådan tilgås materialet
+Det er muligt at køre text mining applikationen på to måder. Den ene måde er via Posit Cloud, hvor applikationen tilgås fra en browser og den anden måde er at køre det lokalt på ens egen computer.
+
+## Tilgå materialet via en browser
+### 1. Gå til Posit Cloud
+Ønsker du at tilgå materialet fra en browser, skal du blot følge dette link: https://posit.cloud/plans/free. Her skal du enten oprette en gratis profil eller logge ind, hvis du allerede har en bruger.
+
+### 2. Kør programmet
+1. Lav et nyt RStudio projekt via 'New project' knappen
+2. Lav et nyt R script under 'Files' --> 'New file'
+3. Skriv følgende kode i scriptet:  
+``` 
+library(shiny)
+library(thematic)
+library(readtext)
+library(writexl)
+library(DT)
+library(tidyverse)
+library(tidytext)
+library(quanteda)
+library(quanteda.textstats)
+library(ggraph)
+library(igraph)
+library(ggwordcloud)
+library(tidygraph)
+
+runGitHub("ShinyTextMining", "AUL-Arts-Digital-Lab") 
+```
+4. Kør koden ved at trykke shift, ctrl og enter
+5. Du kan nu tilgå text mining applikationen
+
+## Tilgå materialet lokalt
 ### 1. Installer R
 Download den nyeste version af R ned på din computer. Husk at vælg en version, der passer til din computers styresystem. R er et ’sprog’ vi skal bruge til at programmere med.
 <br> R kan downloades her: https://posit.co/download/rstudio-desktop/
@@ -18,7 +49,7 @@ Download den nyeste version af RStudio ned på din computer. Husk at vælg en ve
 <br> RStudio kan downloades her: https://posit.co/download/rstudio-desktop/
 
 ### 3. Kør programmet
-1. Lav et nyt script under filer/files 
+1. Lav et nyt R script under filer/files 
 2. Skriv følgende kode:  
 ``` 
 library(shiny)
@@ -38,3 +69,5 @@ library(tidygraph)
 runGitHub("ShinyTextMining", "AUL-Arts-Digital-Lab") 
 ```
 3. Kør koden ved at trykke shift, ctrl og enter
+4. Du kan nu tilgå text mining applikationen
+   
