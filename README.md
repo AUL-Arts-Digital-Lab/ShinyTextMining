@@ -36,7 +36,7 @@ library(igraph)
 library(ggwordcloud)
 library(tidygraph)
 
-#Her fortæller vi R, at vi ønsker at åbne applikationen ShinyTextMining, der ligger på Github under AUL-Arts-Digital-Lab 
+# Her fortæller vi R, at vi ønsker at åbne applikationen ShinyTextMining, der ligger på Github under AUL-Arts-Digital-Lab 
 runGitHub("ShinyTextMining", "AUL-Arts-Digital-Lab") 
 ```
 4. Kør koden ved at trykke shift, ctrl og enter
