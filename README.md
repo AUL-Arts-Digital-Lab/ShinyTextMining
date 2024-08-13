@@ -21,6 +21,7 @@ Det er muligt at køre text mining applikationen på to måder. Den ene måde er
 2. Lav et nyt R script under 'Files' --> 'New file'
 3. Skriv følgende kode i scriptet:  
 ``` 
+# Her tilgås pakkerne, der skal bruges for, at køre applikationen. Pakkerne udvider basisfunktionaliteten i R og gør det blandt andet muligt at åbne og arbejde med applikationer med en brugergrænseflade, hvilket er tilfældet med ShinyTextMining 
 library(shiny)
 library(thematic)
 library(readtext)
@@ -35,6 +36,7 @@ library(igraph)
 library(ggwordcloud)
 library(tidygraph)
 
+#Her fortæller vi R, at vi ønsker at åbne applikationen ShinyTextMining, der ligger på Github under AUL-Arts-Digital-Lab 
 runGitHub("ShinyTextMining", "AUL-Arts-Digital-Lab") 
 ```
 4. Kør koden ved at trykke shift, ctrl og enter
@@ -52,6 +54,7 @@ Download den nyeste version af RStudio ned på din computer. Husk at vælg en ve
 1. Lav et nyt R script under filer/files 
 2. Skriv følgende kode:  
 ``` 
+# Her tilgås pakkerne, der skal bruges for, at køre applikationen. Pakkerne udvider basisfunktionaliteten i R og gør det blandt andet muligt at åbne og arbejde med applikationer med en brugergrænseflade, hvilket er tilfældet med ShinyTextMining 
 library(shiny)
 library(thematic)
 library(readtext)
@@ -66,6 +69,7 @@ library(igraph)
 library(ggwordcloud)
 library(tidygraph)
 
+# Her fortæller vi R, at vi ønsker at åbne applikationen ShinyTextMining, der ligger på Github under AUL-Arts-Digital-Lab 
 runGitHub("ShinyTextMining", "AUL-Arts-Digital-Lab") 
 ```
 3. Kør koden ved at trykke shift, ctrl og enter
